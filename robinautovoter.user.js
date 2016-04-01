@@ -23,7 +23,10 @@ function sendStatistics()
     {
         participantTxt = 200 + " " + $(".robin-user-list-overflow-indicator").text();
     }
-    else participantTxt = participantLen;
+    else
+    {
+        participantTxt = participantLen;
+    }
 
     // FIXME: This math will be incorrect after 200 users. We'll need to loop through roomParticipants
     var novoteLen = $(".robin-room-participant.robin--vote-class--novote").length;
