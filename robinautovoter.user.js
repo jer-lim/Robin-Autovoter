@@ -17,7 +17,7 @@ function sendMessage(message){
 
 setTimeout(function(){
     sendMessage("/vote grow");
-    sendMessage("[Robin Autovoter 1.3] Autovoted grow! https://www.reddit.com/r/joinrobin/comments/4cwk2s/automatic_grow_userscript_bot/d1lzfpu");
+    if(Math.random() < 0.2) sendMessage("[Robin Autovoter 1.3] Autovoted grow! https://www.reddit.com/r/joinrobin/comments/4cwk2s/automatic_grow_userscript_bot/d1lzfpu");
     setTimeout(function(){sendMessage("[Robin Autovoter 1.3] " + $("span:contains('Voting will end')").text());}, 5000);
     setTimeout(function(){
         window.location.reload();
