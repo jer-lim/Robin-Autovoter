@@ -4,7 +4,7 @@
 // @version      1.3
 // @description  Autovotes via text on /r/robin
 // @author       /u/keythkatz
-// @match        https://www.reddit.com/robin/
+// @match        https://www.reddit.com/robin*
 // @grant        none
 // ==/UserScript==
 /* jshint -W097 */
