@@ -3,7 +3,7 @@
 // @namespace    http://jerl.im
 // @version      2.01
 // @description  Autovotes via text on /r/robin
-// @author       /u/keythkatz
+// @author       /u/keythkatz and /u/GuitarShirt
 // @match        https://www.reddit.com/robin*
 // @grant        none
 // ==/UserScript==
@@ -14,7 +14,7 @@ function sendMessage(message){
     $("#robinSendMessage > input[type='submit']").click();
 }
 
-function sendStatistics()
+function generateStatistics(sendToChannel = true)
 {
     var participantLen = $(".robin-room-participant").length;
     var participantTxt = "";
@@ -40,18 +40,55 @@ function sendStatistics()
     var continuePct = (100 * continueLen / participantLen).toFixed(2);
 
     // Send our beautiful message
-    sendMessage("[CHANNEL STATS] " + participantTxt + " USERS | " + increasePct + "% GROW | " + continuePct + "% STAY | " + abandonPct + "% ABANDON | " + novotePct + "% ABSTAIN");
+    if(!sendToChannel)
+    {
+        sendMessage("[CHANNEL STATS] " + participantTxt + " USERS | " + increasePct + "% GROW | " + continuePct + "% STAY | " + abandonPct + "% ABANDON | " + novotePct + "% ABSTAIN");
+    }
+
+    // Create a beautiful widget on the right
+    if($('#robinStatusWidget').length === 0)
+    {
+        // Add the div we're about to update
+        $("#robinDesktopNotifier").after("<div id='robinStatusWidget' class='robin-chat--sidebar-widget'></div>");
+    }
+
+    // Update the div with that data
+    // TODO: This needs some stylesheet love
+    $("#robinStatusWidget").html(
+        "<table style='font-size: 14px;'>" +
+        "<tr>" +
+        "<td>Users</td>" +
+        "<td>" + participantTxt + "</td>" +
+        "</tr>" +
+        "<tr>" +
+        "<td>Grow</td>" +
+        "<td>" + increasePct + "</td>" +
+        "</tr>" +
+        "<tr>" +
+        "<td>Stay</td>" +
+        "<td>" + continuePct + "</td>" +
+        "</tr>" +
+        "<tr>" +
+        "<td>Abandon</td>" +
+        "<td>" + abandonPct + "</td>" +
+        "</tr>" +
+        "<tr>" +
+        "<td>Abstain</td>" +
+        "<td>" + novotePct + "</td>" +
+        "</tr>" +
+        "</table>"
+    );
 
     // Recurse every 60 seconds
-    setTimeout(sendStatistics, 60 * 1000);
+    setTimeout(generateStatistics, 60 * 1000);
 }
 
 (function(){
+    // Immediately trigger the statistics loop.
+    generateStatistics(false);
+
     // 5 Seconds after we join, vote
     setTimeout(sendMessage("/vote grow"), 5 * 1000);
-
-    // 15 Seconds after we join: trigger the channel statistics loop
-    setTimeout(sendStatistics, 15 * 1000);
 
     // 5 Minutes after we join: reload the page
     setTimeout(function(){
