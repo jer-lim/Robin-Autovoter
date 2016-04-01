@@ -1,13 +1,13 @@
 // ==UserScript==
 // @name         Robin Autovoter
 // @namespace    http://jerl.im
-// @version      2.01
+// @version      2.02
 // @description  Autovotes via text on /r/robin
 // @author       /u/keythkatz and /u/GuitarShirt
 // @match        https://www.reddit.com/robin*
 // @grant        none
 // ==/UserScript==
-/* jshint -W097 */
+/* jshint esnext: true */
 
 function sendMessage(message){
     $("#robinSendMessage > input[type='text']").val(message);
