@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Robin Autovoter
 // @namespace    http://jerl.im
-// @version      2.09
+// @version      2.10
 // @description  Autovotes via text on /r/robin
 // @author       /u/GuitarShirt and /u/keythkatz
 // @match        https://www.reddit.com/robin*
@@ -16,38 +16,38 @@ function sendMessage(message){
 
 function updateStatistics(config)
 {
+    // Take over r.stats for this
+    if('undefined' === typeof r['stats'])
+    {
+        r.stats = {};
+    }
+
     // Update the userlist
     if('undefined' !== typeof config['robin_user_list'])
     {
         var robinUserList = config.robin_user_list;
-        var totalUsers = robinUserList.length;
-        var increaseVotes = robinUserList.filter(function(voter){return voter.vote === "INCREASE";}).length;
-        var abandonVotes = robinUserList.filter(function(voter){return voter.vote === "ABANDON";}).length;
-        var abstainVotes = robinUserList.filter(function(voter){return voter.vote === "NOVOTE";}).length;
-        var continueVotes = robinUserList.filter(function(voter){return voter.vote === "CONTINUE";}).length;
-        var abstainPct = (100 * abstainVotes / totalUsers).toFixed(2);
-        var increasePct = (100 * increaseVotes / totalUsers).toFixed(2);
-        var abandonPct = (100 * abandonVotes / totalUsers).toFixed(2);
-        var continuePct = (100 * continueVotes / totalUsers).toFixed(2);
-
-        // Don't ever send messages. I'm tired of the spam D:
-        if(false)
-        {
-            sendMessage("[CHANNEL STATS] " + totalUsers + " USERS | " + increasePct + "% GROW | " + continuePct + "% STAY | " + abandonPct + "% ABANDON | " + abstainPct + "% ABSTAIN");
-        }
+        r.stats.totalUsers = robinUserList.length;
+        r.stats.increaseVotes = robinUserList.filter(function(voter){return voter.vote === "INCREASE";}).length;
+        r.stats.abandonVotes = robinUserList.filter(function(voter){return voter.vote === "ABANDON";}).length;
+        r.stats.abstainVotes = robinUserList.filter(function(voter){return voter.vote === "NOVOTE";}).length;
+        r.stats.continueVotes = robinUserList.filter(function(voter){return voter.vote === "CONTINUE";}).length;
+        r.stats.abstainPct = (100 * r.stats.abstainVotes / r.stats.totalUsers).toFixed(2);
+        r.stats.increasePct = (100 * r.stats.increaseVotes / r.stats.totalUsers).toFixed(2);
+        r.stats.abandonPct = (100 * r.stats.abandonVotes / r.stats.totalUsers).toFixed(2);
+        r.stats.continuePct = (100 * r.stats.continueVotes / r.stats.totalUsers).toFixed(2);
 
         // Update the div with that data
-        $('#totalUsers').html(totalUsers);
+        $('#totalUsers').html(r.stats.totalUsers);
 
-        $('#increaseVotes').html(increaseVotes);
-        $('#continueVotes').html(continueVotes);
-        $('#abandonVotes').html(abandonVotes);
-        $('#abstainVotes').html(abstainVotes);
+        $('#increaseVotes').html(r.stats.increaseVotes);
+        $('#continueVotes').html(r.stats.continueVotes);
+        $('#abandonVotes').html(r.stats.abandonVotes);
+        $('#abstainVotes').html(r.stats.abstainVotes);
 
-        $('#increasePct').html("(" + increasePct + "%)");
-        $('#continuePct').html("(" + continuePct + "%)");
-        $('#abandonPct').html("(" + abandonPct + "%)");
-        $('#abstainPct').html("(" + abstainPct + "%)");
+        $('#increasePct').html("(" + r.stats.increasePct + "%)");
+        $('#continuePct').html("(" + r.stats.continuePct + "%)");
+        $('#abandonPct').html("(" + r.stats.abandonPct + "%)");
+        $('#abstainPct').html("(" + r.stats.abstainPct + "%)");
     }
 }
 
@@ -93,10 +93,8 @@ function generateStatisticsQuery()
     $.get("/robin",parseStatistics);
 }
 
-function updateReapTimer()
+function getTimeUntilReap()
 {
-    setTimeout(updateReapTimer,1000);
-
     var currentTime = Math.floor(Date.now() / 1000);
     var reapTime = Math.floor(r.config.robin_room_reap_time / 1000);
     var dT = Math.abs(reapTime - currentTime);
@@ -111,8 +109,45 @@ function updateReapTimer()
         minutes = "-" + minutes;
     }
 
-    $('#reapTimerMinutes').html(minutes);
-    $('#reapTimerSeconds').html(seconds);
+    return "" + minutes + "m" + seconds + "s";
+}
+
+function updateReapTimer()
+{
+    setTimeout(updateReapTimer,1000);
+
+    $('#reapTimerTime').html(getTimeUntilReap());
+}
+
+function newMessageHandler(records)
+{
+    records.forEach(function(record) {
+        var msg = $(record.addedNodes);
+        if(0 === msg.length)
+        {
+            return;
+        }
+
+        msgText = $(msg[0].children[2]).text();
+        if('!' != msgText[0])
+        {
+            return;
+        }
+
+        // We're specifically prefixing with [ here so that spamblockers will block this
+        if('!timer' == msgText)
+        {
+            sendMessage("[REAP TIMER] " + getTimeUntilReap() + " until reap");
+        }
+        else if('!stats' == msgText)
+        {
+            sendMessage("[CHANNEL STATS] " + r.stats.totalUsers + " USERS | " + r.stats.increasePct + "% GROW | " + r.stats.continuePct + "% STAY | " + r.stats.abandonPct + "% ABANDON | " + r.stats.abstainPct + "% ABSTAIN");
+        }
+        else if('!help' == msgText)
+        {
+            sendMessage("[HELP] !timer !stats https://goo.gl/1ScVnC");
+        }
+    });
 }
 
 (function(){
@@ -159,8 +194,7 @@ function updateReapTimer()
             "</div>" +
             "<div id='robinTimerWidget' class='robin-chat--sidebar-widget'>" +
             "<span style='font-size: 14px'>" +
-            "<span id='reapTimerMinutes'>??</span>m" +
-            "<span id='reapTimerSeconds'>??</span>s" +
+            "<span id='reapTimerTime'>??</span>" +
             " until Room Reap" +
             "</span>" +
             "</div>");
@@ -177,4 +211,13 @@ function updateReapTimer()
 
     // 60 Seconds after we load, trigger the statistics loop
     setTimeout(generateStatisticsQuery, 60 * 1000);
+
+    // Create a hook for !commands
+    if(false)
+    {
+        var observer = new MutationObserver(newMessageHandler);
+        $('#robinChatMessageList').each(function() {
+            observer.observe(this,{childList: true});
+        });
+    }
 })();
