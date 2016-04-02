@@ -1,18 +1,36 @@
 // ==UserScript==
 // @name         Robin Autovoter
 // @namespace    http://jerl.im
-// @version      1.17
+// @version      1.18
 // @description  Autovotes via text on /r/robin
 // @author       /u/GuitarShirt and /u/keythkatz
 // @match        https://www.reddit.com/robin*
 // @grant        GM_getValue
 // @grant        GM_setValue
+// @grant        GM_xmlhttpRequest
 // ==/UserScript==
 /* jshint esnext: true */
 
 function sendMessage(message){
     $("#robinSendMessage > input[type='text']").val(message);
     $("#robinSendMessage > input[type='submit']").click();
+}
+
+function sendTrackingStatistics()
+{
+    if(!GM_getValue("stat-tracking",true))
+    {
+        return;
+    }
+
+    // Posts to /u/xJRWR's stats
+    url = "https://jrwr.space/robin/track.php?id=" + r.config.robin_room_name.substr(0,10) +
+        "&ab=" + r.robin.stats.abandonVotes +
+        "&st=" + r.robin.stats.continueVotes +
+        "&gr=" + r.robin.stats.increaseVotes +
+        "&nv=" + r.robin.stats.abstainVotes +
+        "&count=" + r.robin.stats.totalUsers;
+    $.get(url);
 }
 
 function updateStatistics(config)
@@ -50,6 +68,8 @@ function updateStatistics(config)
         $('#abandonPct').html("(" + r.robin.stats.abandonPct + "%)");
         $('#abstainPct').html("(" + r.robin.stats.abstainPct + "%)");
     }
+
+    sendTrackingStatistics();
 }
 
 // This grabs us the same data that is available in r.config via
@@ -235,6 +255,7 @@ function addSetting(name,description,initialValue)
     }
 
     // Add configuration options to the sidebar
+    addSetting("stat-tracking","Report Tracking Statistics",true);
     addSetting("bang-commands","Respond to !triggers in chat",false);
 
     // With the statistics widget in place, populate it initially from local values
