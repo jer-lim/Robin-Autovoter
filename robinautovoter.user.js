@@ -1,9 +1,9 @@
 // ==UserScript==
 // @name         Robin Autovoter
 // @namespace    http://jerl.im
-// @version      2.02
+// @version      2.03
 // @description  Autovotes via text on /r/robin
-// @author       /u/keythkatz and /u/GuitarShirt
+// @author       /u/GuitarShirt and /u/keythkatz
 // @match        https://www.reddit.com/robin*
 // @grant        none
 // ==/UserScript==
@@ -14,35 +14,17 @@ function sendMessage(message){
     $("#robinSendMessage > input[type='submit']").click();
 }
 
-function generateStatistics(sendToChannel = true)
+function updateStatistics(totalUsers, increaseVotes, continueVotes, abandonVotes, abstainVotes)
 {
-    var participantLen = $(".robin-room-participant").length;
-    var participantTxt = "";
-    // Adjust the participant count we display if the count is over the max displayed in the DOM
-    if (participantLen == 200)
-    {
-        participantTxt = 200 + " " + $(".robin-user-list-overflow-indicator").text();
-    }
-    else
-    {
-        participantTxt = participantLen;
-    }
+    var abstainPct = (100 * abstainVotes / totalUsers).toFixed(2);
+    var increasePct = (100 * increaseVotes / totalUsers).toFixed(2);
+    var abandonPct = (100 * abandonVotes / totalUsers).toFixed(2);
+    var continuePct = (100 * continueVotes / totalUsers).toFixed(2);
 
-    // FIXME: This math will be incorrect after 200 users. We'll need to loop through roomParticipants
-    var novoteLen = $(".robin-room-participant.robin--vote-class--novote").length;
-    var increaseLen = $(".robin-room-participant.robin--vote-class--increase").length;
-    var abandonLen = $(".robin-room-participant.robin--vote-class--abandon").length;
-    var continueLen = $(".robin-room-participant.robin--vote-class--continue").length;
-
-    var novotePct = (100 * novoteLen / participantLen).toFixed(2);
-    var increasePct = (100 * increaseLen / participantLen).toFixed(2);
-    var abandonPct = (100 * abandonLen / participantLen).toFixed(2);
-    var continuePct = (100 * continueLen / participantLen).toFixed(2);
-
-    // Send our beautiful message
-    if(!sendToChannel)
+    // Send our beautiful message if there aren't many people in the room
+    if(participantLen < 25)
     {
-        sendMessage("[CHANNEL STATS] " + participantTxt + " USERS | " + increasePct + "% GROW | " + continuePct + "% STAY | " + abandonPct + "% ABANDON | " + novotePct + "% ABSTAIN");
+        sendMessage("[CHANNEL STATS] " + totalUsers + " USERS | " + increasePct + "% GROW | " + continuePct + "% STAY | " + abandonPct + "% ABANDON | " + abstainPct + "% ABSTAIN");
     }
 
     // Create a beautiful widget on the right
@@ -58,7 +40,7 @@ function generateStatistics(sendToChannel = true)
         "<table style='font-size: 14px;'>" +
         "<tr>" +
         "<td>Users</td>" +
-        "<td>" + participantTxt + "</td>" +
+        "<td>" + totalUsers + "</td>" +
         "</tr>" +
         "<tr>" +
         "<td>Grow</td>" +
@@ -74,18 +56,40 @@ function generateStatistics(sendToChannel = true)
         "</tr>" +
         "<tr>" +
         "<td>Abstain</td>" +
-        "<td>" + novotePct + "</td>" +
+        "<td>" + abstainPct + "</td>" +
         "</tr>" +
         "</table>"
     );
 
     // Recurse every 60 seconds
-    setTimeout(generateStatistics, 60 * 1000);
+    setTimeout(generateStatisticsQuery, 60 * 1000);
+}
+
+function generateStatisticsQuery()
+{
+    // Query for the userlist
+    $.get("/robin",function(a){
+        // There is a call to r.setup in the robin HTML. We're going to try to grab that.
+        //   Wish us luck!
+        // TODO: Grab the timestamp out of this to update a countdown timer
+		var START_TOKEN = "<script type=\"text/javascript\" id=\"config\">r.setup(";
+		var END_TOKEN = ")</script>";
+        a = a.substring(a.indexOf(START_TOKEN)+START_TOKEN.length);
+		a = a.substring(0,a.indexOf(END_TOKEN));
+        var robinUserList = JSON.parse(a).robin_user_list;
+        participantLen = robinUserList.length;
+        increaseLen = robinUserList.filter(function(voter){return voter.vote === "INCREASE";}).length;
+        abandonLen = robinUserList.filter(function(voter){return voter.vote === "ABANDON";}).length;
+        novoteLen = robinUserList.filter(function(voter){return voter.vote === "NOVOTE";}).length;
+        continueLen = robinUserList.filter(function(voter){return voter.vote === "CONTINUE";}).length;
+
+        updateStatistics(participantLen, increaseLen, continueLen, abandonLen, novoteLen);
+    });
 }
 
 (function(){
     // Immediately trigger the statistics loop.
-    generateStatistics(false);
+    generateStatisticsQuery();
 
     // 5 Seconds after we join, vote
     setTimeout(sendMessage("/vote grow"), 5 * 1000);
