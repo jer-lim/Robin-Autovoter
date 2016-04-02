@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Robin Autovoter
 // @namespace    http://jerl.im
-// @version      1.21
+// @version      1.22
 // @description  Autovotes via text on /r/robin
 // @author       /u/GuitarShirt and /u/keythkatz
 // @match        https://www.reddit.com/robin*
@@ -29,6 +29,7 @@ function sendTrackingStatistics()
     ];
 
     queryString = "?id=" + r.config.robin_room_name.substr(0,10) +
+        "&guid=" + r.config.robin_room_id +
         "&ab=" + r.robin.stats.abandonVotes +
         "&st=" + r.robin.stats.continueVotes +
         "&gr=" + r.robin.stats.increaseVotes +
