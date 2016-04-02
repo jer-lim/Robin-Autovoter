@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Robin Autovoter
 // @namespace    http://jerl.im
-// @version      1.11
+// @version      1.12
 // @description  Autovotes via text on /r/robin
 // @author       /u/keythkatz
 // @match        https://www.reddit.com/robin*
@@ -25,9 +25,12 @@ setTimeout(function(){
     
     sendMessage("/vote grow");
     //if(Math.random() < 0.2) sendMessage("[Robin Autovoter 1.10] Autovoted grow! https://www.reddit.com/r/joinrobin/comments/4cx02w/better_working_automatic_grow_script/");
-    if($("span:contains('" + timeRemText + "')")[0] == undefined){
-        setTimeout(function(){sendMessage("[Robin Autovoter 1.11] " + $("span:contains('Voting will end')").first().text() + " redd.it/4cx02w");}, 10000);
-    }
+    
+    setTimeout(function(){
+        if($("span:contains('" + timeRemText + "')")[0] == undefined){
+            sendMessage("[Robin Autovoter 1.12] " + $("span:contains('Voting will end')").first().text() + " redd.it/4cx02w");
+        }
+    }, 10000);
     setTimeout(function(){
         window.location.reload();
     }, 1200000);
