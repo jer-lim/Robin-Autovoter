@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Robin Autovoter
 // @namespace    http://jerl.im
-// @version      1.15
+// @version      1.16
 // @description  Autovotes via text on /r/robin
 // @author       /u/GuitarShirt and /u/keythkatz
 // @match        https://www.reddit.com/robin*
@@ -214,14 +214,6 @@ if(document.querySelectorAll("button.robin-home--thebutton").length > 0){
 
     // Keep track of the room reap time
     updateReapTimer();
-    
-    // Spam chat, but only if nobody else has already done so and the room size is large enough to not be a fuss
-    var timeRemText = "] " + $("span:contains('Voting will end')").first().text();
-    setTimeout(function(){
-        if($("span:contains('" + timeRemText + "')")[0] == undefined && r.stats.totalUsers > 100){
-            sendMessage("[Robin Autovoter 1.15] " + $("span:contains('Voting will end')").first().text() + " redd.it/4cx02w");
-        }
-    }, 10000);
 
     // 5 Seconds after we join, vote
     setTimeout(sendMessage("/vote grow"), 5 * 1000);
