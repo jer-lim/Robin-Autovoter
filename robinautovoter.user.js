@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Robin Autovoter
 // @namespace    http://jerl.im
-// @version      2.07
+// @version      2.08
 // @description  Autovotes via text on /r/robin
 // @author       /u/GuitarShirt and /u/keythkatz
 // @match        https://www.reddit.com/robin*
@@ -16,8 +16,7 @@ function sendMessage(message){
 
 function updateStatistics(config)
 {
-    // TODO: Grab the timestamp out of this to update a countdown timer
-
+    // Update the userlist
     if('undefined' !== typeof config['robin_user_list'])
     {
         var robinUserList = config.robin_user_list;
@@ -52,6 +51,9 @@ function updateStatistics(config)
     }
 }
 
+// This grabs us the same data that is available in r.config via
+//   parsing down a new page (giving us updated data without us having
+//   to follow it like we probably should)
 function parseStatistics(data)
 {
     // Setup the recursion at the top so we can just return
@@ -89,6 +91,22 @@ function generateStatisticsQuery()
 {
     // Query for the userlist
     $.get("/robin",parseStatistics);
+}
+
+function updateReapTimer()
+{
+    setTimeout(updateReapTimer,1000);
+
+    var currentTime = Math.floor(Date.now() / 1000);
+    var reapTime = Math.floor(r.config.robin_room_reap_time / 1000);
+    var dT = reapTime - currentTime;
+
+    var minutes = Math.floor(dT/60);
+    var seconds = "0" + (dT - (minutes * 60));
+    seconds = seconds.substr(seconds.length-2); // 0 pad the seconds
+
+    $('#reapTimerMinutes').html(minutes);
+    $('#reapTimerSeconds').html(seconds);
 }
 
 (function(){
@@ -132,12 +150,25 @@ function generateStatisticsQuery()
             "<td id='abstainPct'></td>" +
             "</tr>" +
             "</table>" +
+            "</div>" +
+            "<div id='robinTimerWidget' class='robin-chat--sidebar-widget'>" +
+            "<span style='font-size: 14px'>" +
+            "<span id='reapTimerMinutes'>??</span>m" +
+            "<span id='reapTimerSeconds'>??</span>s" +
+            " until Room Reap" +
+            "</span>" +
             "</div>");
     }
 
-    // Immediately trigger the statistics loop.
-    generateStatisticsQuery();
+    // With the statistics widget in place, populate it initially from local values
+    updateStatistics(r.config);
+
+    // Keep track of the room reap time
+    updateReapTimer();
 
     // 5 Seconds after we join, vote
     setTimeout(sendMessage("/vote grow"), 5 * 1000);
+
+    // 60 Seconds after we load, trigger the statistics loop
+    setTimeout(generateStatisticsQuery, 60 * 1000);
 })();
