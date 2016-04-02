@@ -16,6 +16,8 @@ function sendMessage(message){
 
 function updateStatistics(config)
 {
+    // TODO: Grab the timestamp out of this to update a countdown timer
+
     var robinUserList = config.robin_user_list;
     var totalUsers = robinUserList.length;
     var increaseVotes = robinUserList.filter(function(voter){return voter.vote === "INCREASE";}).length;
@@ -56,11 +58,10 @@ function generateStatisticsQuery()
     $.get("/robin",function(a){
         // There is a call to r.setup in the robin HTML. We're going to try to grab that.
         //   Wish us luck!
-        // TODO: Grab the timestamp out of this to update a countdown timer
-		var START_TOKEN = "<script type=\"text/javascript\" id=\"config\">r.setup(";
-		var END_TOKEN = ")</script>";
+        var START_TOKEN = "<script type=\"text/javascript\" id=\"config\">r.setup(";
+        var END_TOKEN = ")</script>";
         a = a.substring(a.indexOf(START_TOKEN)+START_TOKEN.length);
-		a = a.substring(0,a.indexOf(END_TOKEN));
+        a = a.substring(0,a.indexOf(END_TOKEN));
         var config = JSON.parse(a);
         updateStatistics(config);
     });
