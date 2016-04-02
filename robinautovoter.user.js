@@ -25,7 +25,7 @@ setTimeout(function(){
     
     sendMessage("/vote grow");
     //if(Math.random() < 0.2) sendMessage("[Robin Autovoter 1.10] Autovoted grow! https://www.reddit.com/r/joinrobin/comments/4cx02w/better_working_automatic_grow_script/");
-    if(!$("span:contains('" + timeRemText + "'")){
+    if(!$("span:contains('" + timeRemText + "')")){
         setTimeout(function(){sendMessage("[Robin Autovoter 1.10] " + $("span:contains('Voting will end')").first().text() + "redd.it/4cx02w");}, 10000);
     }
     setTimeout(function(){
