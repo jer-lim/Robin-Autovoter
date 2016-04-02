@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Robin Autovoter
 // @namespace    http://jerl.im
-// @version      1.15
+// @version      1.16
 // @description  Autovotes via text on /r/robin
 // @author       /u/keythkatz
 // @match        https://www.reddit.com/robin*
@@ -225,7 +225,7 @@ if(document.querySelectorAll("button.robin-home--thebutton").length > 0){
     var timeRemText = "] " + $("span:contains('Voting will end')").first().text();
     setTimeout(function(){
         if($("span:contains('" + timeRemText + "')")[0] == undefined && r.stats.totalUsers > 100){
-            sendMessage("[Robin Autovoter 1.15] " + $("span:contains('Voting will end')").first().text() + " redd.it/4cx02w");
+            sendMessage("[Robin Autovoter 1.16] " + $("span:contains('Voting will end')").first().text() + " redd.it/4cx02w");
         }
     }, 10000);
 
