@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Robin Autovoter
 // @namespace    http://jerl.im
-// @version      1.22
+// @version      1.23
 // @description  Autovotes via text on /r/robin
 // @author       /u/GuitarShirt and /u/keythkatz
 // @match        https://www.reddit.com/robin*
@@ -16,11 +16,26 @@ function sendMessage(message){
     $("#robinSendMessage > input[type='submit']").click();
 }
 
-function sendTrackingStatistics()
+function sendTrackingStatistics(config)
 {
     if(!GM_getValue("stat-tracking",true))
     {
         return;
+    }
+
+    // Use the name / id from the passed config if available
+    //  Otherwise fallback to the baked info
+    room_name = r.config.robin_room_name;
+    room_id = r.config.robin_room_id;
+
+    if('undefined' !== typeof config['robin_room_name'])
+    {
+        room_name = config.robin_room_name;
+    }
+
+    if('undefined' !== typeof config['robin_room_id'])
+    {
+        room_id = config.robin_room_id;
     }
 
     trackers = [
@@ -28,8 +43,8 @@ function sendTrackingStatistics()
         "https://monstrouspeace.com/robintracker/track.php"
     ];
 
-    queryString = "?id=" + r.config.robin_room_name.substr(0,10) +
-        "&guid=" + r.config.robin_room_id +
+    queryString = "?id=" + room_name.substr(0,10) +
+        "&guid=" + room_id +
         "&ab=" + r.robin.stats.abandonVotes +
         "&st=" + r.robin.stats.continueVotes +
         "&gr=" + r.robin.stats.increaseVotes +
@@ -79,7 +94,7 @@ function updateStatistics(config)
         $('#abstainPct').html("(" + r.robin.stats.abstainPct + "%)");
     }
 
-    sendTrackingStatistics();
+    sendTrackingStatistics(config);
 }
 
 // This grabs us the same data that is available in r.config via
