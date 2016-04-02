@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Robin Autovoter
 // @namespace    http://jerl.im
-// @version      2.03
+// @version      2.04
 // @description  Autovotes via text on /r/robin
 // @author       /u/GuitarShirt and /u/keythkatz
 // @match        https://www.reddit.com/robin*
@@ -39,24 +39,29 @@ function updateStatistics(totalUsers, increaseVotes, continueVotes, abandonVotes
     $("#robinStatusWidget").html(
         "<table style='font-size: 14px;'>" +
         "<tr>" +
-        "<td>Users</td>" +
+        "<td style='padding-right: 3px;'>Total</td>" +
         "<td>" + totalUsers + "</td>" +
+        "<td></td>" +
         "</tr>" +
         "<tr>" +
-        "<td>Grow</td>" +
-        "<td>" + increasePct + "</td>" +
+        "<td class='robin--vote-class--increase'><span class='robin--icon'></span></td>" +
+        "<td>" + increaseVotes + "</td>" +
+        "<td>(" + increasePct + "%)</td>" +
         "</tr>" +
         "<tr>" +
-        "<td>Stay</td>" +
-        "<td>" + continuePct + "</td>" +
+        "<td class='robin--vote-class--continue'><span class='robin--icon'></span></td>" +
+        "<td>" + continueVotes + "</td>" +
+        "<td>(" + continuePct + "%)</td>" +
         "</tr>" +
         "<tr>" +
-        "<td>Abandon</td>" +
-        "<td>" + abandonPct + "</td>" +
+        "<td class='robin--vote-class--abandon'><span class='robin--icon'></span></td>" +
+        "<td>" + abandonVotes + "</td>" +
+        "<td>(" + abandonPct + "%)</td>" +
         "</tr>" +
         "<tr>" +
-        "<td>Abstain</td>" +
-        "<td>" + abstainPct + "</td>" +
+        "<td class='robin--vote-class--novote'><span class='robin--icon'></span></td>" +
+        "<td>" + abstainVotes + "</td>" +
+        "<td>(" + abstainPct + "%)</td>" +
         "</tr>" +
         "</table>"
     );
