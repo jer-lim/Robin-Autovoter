@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Robin Autovoter
 // @namespace    http://jerl.im
-// @version      2.04
+// @version      2.05
 // @description  Autovotes via text on /r/robin
 // @author       /u/GuitarShirt and /u/keythkatz
 // @match        https://www.reddit.com/robin*
@@ -14,57 +14,37 @@ function sendMessage(message){
     $("#robinSendMessage > input[type='submit']").click();
 }
 
-function updateStatistics(totalUsers, increaseVotes, continueVotes, abandonVotes, abstainVotes)
+function updateStatistics(config)
 {
+    var robinUserList = config.robin_user_list;
+    var totalUsers = robinUserList.length;
+    var increaseVotes = robinUserList.filter(function(voter){return voter.vote === "INCREASE";}).length;
+    var abandonVotes = robinUserList.filter(function(voter){return voter.vote === "ABANDON";}).length;
+    var abstainVotes = robinUserList.filter(function(voter){return voter.vote === "NOVOTE";}).length;
+    var continueVotes = robinUserList.filter(function(voter){return voter.vote === "CONTINUE";}).length;
     var abstainPct = (100 * abstainVotes / totalUsers).toFixed(2);
     var increasePct = (100 * increaseVotes / totalUsers).toFixed(2);
     var abandonPct = (100 * abandonVotes / totalUsers).toFixed(2);
     var continuePct = (100 * continueVotes / totalUsers).toFixed(2);
 
     // Send our beautiful message if there aren't many people in the room
-    if(participantLen < 25)
+    if(totalUsers < 25)
     {
         sendMessage("[CHANNEL STATS] " + totalUsers + " USERS | " + increasePct + "% GROW | " + continuePct + "% STAY | " + abandonPct + "% ABANDON | " + abstainPct + "% ABSTAIN");
     }
 
-    // Create a beautiful widget on the right
-    if($('#robinStatusWidget').length === 0)
-    {
-        // Add the div we're about to update
-        $("#robinDesktopNotifier").after("<div id='robinStatusWidget' class='robin-chat--sidebar-widget'></div>");
-    }
-
     // Update the div with that data
-    // TODO: This needs some stylesheet love
-    $("#robinStatusWidget").html(
-        "<table style='font-size: 14px;'>" +
-        "<tr>" +
-        "<td style='padding-right: 3px;'>Total</td>" +
-        "<td>" + totalUsers + "</td>" +
-        "<td></td>" +
-        "</tr>" +
-        "<tr>" +
-        "<td class='robin--vote-class--increase'><span class='robin--icon'></span></td>" +
-        "<td>" + increaseVotes + "</td>" +
-        "<td>(" + increasePct + "%)</td>" +
-        "</tr>" +
-        "<tr>" +
-        "<td class='robin--vote-class--continue'><span class='robin--icon'></span></td>" +
-        "<td>" + continueVotes + "</td>" +
-        "<td>(" + continuePct + "%)</td>" +
-        "</tr>" +
-        "<tr>" +
-        "<td class='robin--vote-class--abandon'><span class='robin--icon'></span></td>" +
-        "<td>" + abandonVotes + "</td>" +
-        "<td>(" + abandonPct + "%)</td>" +
-        "</tr>" +
-        "<tr>" +
-        "<td class='robin--vote-class--novote'><span class='robin--icon'></span></td>" +
-        "<td>" + abstainVotes + "</td>" +
-        "<td>(" + abstainPct + "%)</td>" +
-        "</tr>" +
-        "</table>"
-    );
+    $('#totalUsers').html(totalUsers);
+
+    $('#increaseVotes').html(increaseVotes);
+    $('#continueVotes').html(continueVotes);
+    $('#abandonVotes').html(abandonVotes);
+    $('#abstainVotes').html(abstainVotes);
+
+    $('#increasePct').html("(" + increasePct + "%)");
+    $('#continuePct').html("(" + continuePct + "%)");
+    $('#abandonPct').html("(" + abandonPct + "%)");
+    $('#abstainPct').html("(" + abstainPct + "%)");
 
     // Recurse every 60 seconds
     setTimeout(generateStatisticsQuery, 60 * 1000);
@@ -81,18 +61,48 @@ function generateStatisticsQuery()
 		var END_TOKEN = ")</script>";
         a = a.substring(a.indexOf(START_TOKEN)+START_TOKEN.length);
 		a = a.substring(0,a.indexOf(END_TOKEN));
-        var robinUserList = JSON.parse(a).robin_user_list;
-        participantLen = robinUserList.length;
-        increaseLen = robinUserList.filter(function(voter){return voter.vote === "INCREASE";}).length;
-        abandonLen = robinUserList.filter(function(voter){return voter.vote === "ABANDON";}).length;
-        novoteLen = robinUserList.filter(function(voter){return voter.vote === "NOVOTE";}).length;
-        continueLen = robinUserList.filter(function(voter){return voter.vote === "CONTINUE";}).length;
-
-        updateStatistics(participantLen, increaseLen, continueLen, abandonLen, novoteLen);
+        var config = JSON.parse(a);
+        updateStatistics(config);
     });
 }
 
 (function(){
+    // Insert the statistics widget
+    if($('#robinStatusWidget').length === 0)
+    {
+        // TODO: This needs some stylesheet love
+        $("#robinDesktopNotifier").after(
+            "<div id='robinStatusWidget' class='robin-chat--sidebar-widget'>" +
+            "<table style='font-size: 14px;'>" +
+            "<tr>" +
+            "<td style='padding-right: 3px;'>Total</td>" +
+            "<td id='totalUsers'></td>" +
+            "<td></td>" +
+            "</tr>" +
+            "<tr>" +
+            "<td class='robin--vote-class--increase'><span class='robin--icon'></span></td>" +
+            "<td id='increaseVotes'></td>" +
+            "<td id='increasePct'></td>" +
+            "</tr>" +
+            "<tr>" +
+            "<td class='robin--vote-class--continue'><span class='robin--icon'></span></td>" +
+            "<td id='continueVotes'></td>" +
+            "<td id='continuePct'></td>" +
+            "</tr>" +
+            "<tr>" +
+            "<td class='robin--vote-class--abandon'><span class='robin--icon'></span></td>" +
+            "<td id='abandonVotes'></td>" +
+            "<td id='abandonPct'></td>" +
+            "</tr>" +
+            "<tr>" +
+            "<td class='robin--vote-class--novote'><span class='robin--icon'></span></td>" +
+            "<td id='abstainVotes'></td>" +
+            "<td id='abstainPct'></td>" +
+            "</tr>" +
+            "</table>" +
+            "</div>");
+    }
+
     // Immediately trigger the statistics loop.
     generateStatisticsQuery();
 
