@@ -160,7 +160,7 @@ function handleBangCommands(user,msg)
     }
     else if('!help' == msgText)
     {
-        sendMessage("[HELP] !timer !stats https://goo.gl/1ScVnC");
+        sendMessage("[HELP] !timer !stats https://goo.gl/6jfAk0");
     }
 }
 
