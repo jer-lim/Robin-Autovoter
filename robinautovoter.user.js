@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Robin Autovoter
 // @namespace    http://jerl.im
-// @version      2.05
+// @version      2.06
 // @description  Autovotes via text on /r/robin
 // @author       /u/GuitarShirt and /u/keythkatz
 // @match        https://www.reddit.com/robin*
@@ -29,8 +29,8 @@ function updateStatistics(config)
     var abandonPct = (100 * abandonVotes / totalUsers).toFixed(2);
     var continuePct = (100 * continueVotes / totalUsers).toFixed(2);
 
-    // Send our beautiful message if there aren't many people in the room
-    if(totalUsers < 25)
+    // Don't ever send messages. I'm tired of the spam D:
+    if(false)
     {
         sendMessage("[CHANNEL STATS] " + totalUsers + " USERS | " + increasePct + "% GROW | " + continuePct + "% STAY | " + abandonPct + "% ABANDON | " + abstainPct + "% ABSTAIN");
     }
@@ -68,6 +68,13 @@ function generateStatisticsQuery()
 }
 
 (function(){
+    // The first thing we do is setup a timer to reload the page.
+    //   Hopefully this will save us if the CDN dies again >.>
+    // 5 Minutes after we join: reload the page
+    setTimeout(function(){
+        window.location.reload();
+    }, 5 * 60 * 1000);
+
     // Insert the statistics widget
     if($('#robinStatusWidget').length === 0)
     {
@@ -109,9 +116,4 @@ function generateStatisticsQuery()
 
     // 5 Seconds after we join, vote
     setTimeout(sendMessage("/vote grow"), 5 * 1000);
-
-    // 5 Minutes after we join: reload the page
-    setTimeout(function(){
-        window.location.reload();
-    }, 5 * 60 * 1000);
 })();
