@@ -1,11 +1,12 @@
 // ==UserScript==
 // @name         Robin Autovoter
 // @namespace    http://jerl.im
-// @version      1.16
+// @version      1.17
 // @description  Autovotes via text on /r/robin
 // @author       /u/GuitarShirt and /u/keythkatz
 // @match        https://www.reddit.com/robin*
-// @grant        none
+// @grant        GM_getValue
+// @grant        GM_setValue
 // ==/UserScript==
 /* jshint esnext: true */
 
@@ -16,38 +17,38 @@ function sendMessage(message){
 
 function updateStatistics(config)
 {
-    // Take over r.stats for this
-    if('undefined' === typeof r['stats'])
+    // Take over r.robin.stats for this
+    if('undefined' === typeof r.robin['stats'])
     {
-        r.stats = {};
+        r.robin.stats = {};
     }
 
     // Update the userlist
     if('undefined' !== typeof config['robin_user_list'])
     {
         var robinUserList = config.robin_user_list;
-        r.stats.totalUsers = robinUserList.length;
-        r.stats.increaseVotes = robinUserList.filter(function(voter){return voter.vote === "INCREASE";}).length;
-        r.stats.abandonVotes = robinUserList.filter(function(voter){return voter.vote === "ABANDON";}).length;
-        r.stats.abstainVotes = robinUserList.filter(function(voter){return voter.vote === "NOVOTE";}).length;
-        r.stats.continueVotes = robinUserList.filter(function(voter){return voter.vote === "CONTINUE";}).length;
-        r.stats.abstainPct = (100 * r.stats.abstainVotes / r.stats.totalUsers).toFixed(2);
-        r.stats.increasePct = (100 * r.stats.increaseVotes / r.stats.totalUsers).toFixed(2);
-        r.stats.abandonPct = (100 * r.stats.abandonVotes / r.stats.totalUsers).toFixed(2);
-        r.stats.continuePct = (100 * r.stats.continueVotes / r.stats.totalUsers).toFixed(2);
+        r.robin.stats.totalUsers = robinUserList.length;
+        r.robin.stats.increaseVotes = robinUserList.filter(function(voter){return voter.vote === "INCREASE";}).length;
+        r.robin.stats.abandonVotes = robinUserList.filter(function(voter){return voter.vote === "ABANDON";}).length;
+        r.robin.stats.abstainVotes = robinUserList.filter(function(voter){return voter.vote === "NOVOTE";}).length;
+        r.robin.stats.continueVotes = robinUserList.filter(function(voter){return voter.vote === "CONTINUE";}).length;
+        r.robin.stats.abstainPct = (100 * r.robin.stats.abstainVotes / r.robin.stats.totalUsers).toFixed(2);
+        r.robin.stats.increasePct = (100 * r.robin.stats.increaseVotes / r.robin.stats.totalUsers).toFixed(2);
+        r.robin.stats.abandonPct = (100 * r.robin.stats.abandonVotes / r.robin.stats.totalUsers).toFixed(2);
+        r.robin.stats.continuePct = (100 * r.robin.stats.continueVotes / r.robin.stats.totalUsers).toFixed(2);
 
         // Update the div with that data
-        $('#totalUsers').html(r.stats.totalUsers);
+        $('#totalUsers').html(r.robin.stats.totalUsers);
 
-        $('#increaseVotes').html(r.stats.increaseVotes);
-        $('#continueVotes').html(r.stats.continueVotes);
-        $('#abandonVotes').html(r.stats.abandonVotes);
-        $('#abstainVotes').html(r.stats.abstainVotes);
+        $('#increaseVotes').html(r.robin.stats.increaseVotes);
+        $('#continueVotes').html(r.robin.stats.continueVotes);
+        $('#abandonVotes').html(r.robin.stats.abandonVotes);
+        $('#abstainVotes').html(r.robin.stats.abstainVotes);
 
-        $('#increasePct').html("(" + r.stats.increasePct + "%)");
-        $('#continuePct').html("(" + r.stats.continuePct + "%)");
-        $('#abandonPct').html("(" + r.stats.abandonPct + "%)");
-        $('#abstainPct').html("(" + r.stats.abstainPct + "%)");
+        $('#increasePct').html("(" + r.robin.stats.increasePct + "%)");
+        $('#continuePct').html("(" + r.robin.stats.continuePct + "%)");
+        $('#abandonPct').html("(" + r.robin.stats.abandonPct + "%)");
+        $('#abstainPct').html("(" + r.robin.stats.abstainPct + "%)");
     }
 }
 
@@ -119,6 +120,28 @@ function updateReapTimer()
     $('#reapTimerTime').html(getTimeUntilReap());
 }
 
+function handleBangCommands(user,msg)
+{
+    if('!' != msgText[0])
+    {
+        return;
+    }
+
+    // We're specifically prefixing with [ here so that spamblockers will block this
+    if('!timer' == msgText)
+    {
+        sendMessage("[REAP TIMER] " + getTimeUntilReap() + " until reap");
+    }
+    else if('!stats' == msgText)
+    {
+        sendMessage("[CHANNEL STATS] " + r.robin.stats.totalUsers + " USERS | " + r.robin.stats.increasePct + "% GROW | " + r.robin.stats.continuePct + "% STAY | " + r.robin.stats.abandonPct + "% ABANDON | " + r.robin.stats.abstainPct + "% ABSTAIN");
+    }
+    else if('!help' == msgText)
+    {
+        sendMessage("[HELP] !timer !stats https://goo.gl/1ScVnC");
+    }
+}
+
 function newMessageHandler(records)
 {
     records.forEach(function(record) {
@@ -128,50 +151,51 @@ function newMessageHandler(records)
             return;
         }
 
+        user = $(msg[0].children[1]).text();
         msgText = $(msg[0].children[2]).text();
-        if('!' != msgText[0])
+        if(GM_getValue("bang-commands",false))
         {
-            return;
-        }
-
-        // We're specifically prefixing with [ here so that spamblockers will block this
-        if('!timer' == msgText)
-        {
-            sendMessage("[REAP TIMER] " + getTimeUntilReap() + " until reap");
-        }
-        else if('!stats' == msgText)
-        {
-            sendMessage("[CHANNEL STATS] " + r.stats.totalUsers + " USERS | " + r.stats.increasePct + "% GROW | " + r.stats.continuePct + "% STAY | " + r.stats.abandonPct + "% ABANDON | " + r.stats.abstainPct + "% ABSTAIN");
-        }
-        else if('!help' == msgText)
-        {
-            sendMessage("[HELP] !timer !stats https://goo.gl/1ScVnC");
+            handleBangCommands(user,msgText);
         }
     });
 }
 
-// Reload page on 503
-if(document.querySelectorAll("img[src='//www.redditstatic.com/trouble-afoot.jpg']").length > 0) window.location.reload();
+function addSetting(name,description,initialValue)
+{
+    currentValue = GM_getValue(name,initialValue);
 
-// Rejoin room on fail
-if(document.querySelectorAll("button.robin-home--thebutton").length > 0){
-    $("#joinRobinContainer").click();
-    setTimeout(function(){ $("button.robin-home--thebutton").click(); }, 1000);
+    $("#robinDesktopNotifier").append("<label><input type='checkbox' name='robin-" + name + "' " + (currentValue?"checked":"") + ">" + description + "</input></label>");
+    $("input[name='robin-" + name + "']").on("change",function() {
+        GM_setValue(name,$(this).is(":checked"));
+    });
 }
 
 (function(){
-    // The first thing we do is setup a timer to reload the page.
-    //   Hopefully this will save us if the CDN dies again >.>
-    // 20 Minutes after we join (halfway to max): reload the page
+
+    // The first thing we do is make sure everything's alright
+    // Reload page on 503
+    if(document.querySelectorAll("img[src='//www.redditstatic.com/trouble-afoot.jpg']").length > 0) window.location.reload();
+
+    // Rejoin room on fail
+    if(document.querySelectorAll("button.robin-home--thebutton").length > 0){
+        $("#joinRobinContainer").click();
+        setTimeout(function(){ $("button.robin-home--thebutton").click(); }, 1000);
+    }
+
+    // The second thing we do is setup a timer to reload the page.
+    //   If the above two lines don't save us, at least we'll reload before
+    //   the timer's up
+    // 16 minutes after we join (halfway to max): reload the page
     setTimeout(function(){
         window.location.reload();
-    }, 20 * 60 * 1000);
+    }, 16 * 60 * 1000);
 
     // Insert the statistics widget
     if($('#robinStatusWidget').length === 0)
     {
         // TODO: This needs some stylesheet love
         $("#robinDesktopNotifier").after(
+            // Statistics Widget
             "<div id='robinStatusWidget' class='robin-chat--sidebar-widget'>" +
             "<table style='font-size: 14px;'>" +
             "<tr>" +
@@ -201,13 +225,17 @@ if(document.querySelectorAll("button.robin-home--thebutton").length > 0){
             "</tr>" +
             "</table>" +
             "</div>" +
+            // Reap timer widget
             "<div id='robinTimerWidget' class='robin-chat--sidebar-widget'>" +
             "<span style='font-size: 14px'>" +
             "<span id='reapTimerTime'>??</span>" +
-            " until Room Reap" +
+            " until room is reaped" +
             "</span>" +
             "</div>");
     }
+
+    // Add configuration options to the sidebar
+    addSetting("bang-commands","Respond to !triggers in chat",false);
 
     // With the statistics widget in place, populate it initially from local values
     updateStatistics(r.config);
@@ -216,17 +244,14 @@ if(document.querySelectorAll("button.robin-home--thebutton").length > 0){
     updateReapTimer();
 
     // 5 Seconds after we join, vote
-    setTimeout(sendMessage("/vote grow"), 5 * 1000);
+    setTimeout(function(){sendMessage("/vote grow");}, 5 * 1000);
 
     // 60 Seconds after we load, trigger the statistics loop
     setTimeout(generateStatisticsQuery, 60 * 1000);
 
     // Create a hook for !commands
-    if(false)
-    {
-        var observer = new MutationObserver(newMessageHandler);
-        $('#robinChatMessageList').each(function() {
-            observer.observe(this,{childList: true});
-        });
-    }
+    var observer = new MutationObserver(newMessageHandler);
+    $('#robinChatMessageList').each(function() {
+        observer.observe(this,{childList: true});
+    });
 })();
