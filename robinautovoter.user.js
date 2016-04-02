@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Robin Autovoter
 // @namespace    http://jerl.im
-// @version      1.12
+// @version      1.13
 // @description  Autovotes via text on /r/robin
 // @author       /u/keythkatz
 // @match        https://www.reddit.com/robin*
@@ -14,6 +14,8 @@ function sendMessage(message){
     $("#robinSendMessage > input[type='text']").val(message);
     $("#robinSendMessage > input[type='submit']").click();
 }
+if(document.querySelectorAll("img[src='//www.redditstatic.com/trouble-afoot.jpg']").length > 0) window.location.reload();
+if(document.querySelectorAll("button.robin-home--thebutton").length > 0) $("button.robin-home--thebutton").click();
 
 setTimeout(function(){
     //var participants = $(".robin-room-participant").length;
@@ -28,7 +30,7 @@ setTimeout(function(){
     
     setTimeout(function(){
         if($("span:contains('" + timeRemText + "')")[0] == undefined){
-            sendMessage("[Robin Autovoter 1.12] " + $("span:contains('Voting will end')").first().text() + " redd.it/4cx02w");
+            sendMessage("[Robin Autovoter 1.13] " + $("span:contains('Voting will end')").first().text() + " redd.it/4cx02w");
         }
     }, 10000);
     setTimeout(function(){
