@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Robin Autovoter
 // @namespace    http://jerl.im
-// @version      1.20
+// @version      1.21
 // @description  Autovotes via text on /r/robin
 // @author       /u/GuitarShirt and /u/keythkatz
 // @match        https://www.reddit.com/robin*
@@ -23,7 +23,10 @@ function sendTrackingStatistics()
         return;
     }
 
-    trackers = ["https://jrwr.space/robin/track.php"];
+    trackers = [
+        "https://jrwr.space/robin/track.php",
+        "https://monstrouspeace.com/robintracker/track.php"
+    ];
 
     queryString = "?id=" + r.config.robin_room_name.substr(0,10) +
         "&ab=" + r.robin.stats.abandonVotes +
