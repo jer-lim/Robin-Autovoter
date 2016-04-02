@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Robin Autovoter
 // @namespace    http://jerl.im
-// @version      2.06
+// @version      2.07
 // @description  Autovotes via text on /r/robin
 // @author       /u/GuitarShirt and /u/keythkatz
 // @match        https://www.reddit.com/robin*
@@ -18,53 +18,77 @@ function updateStatistics(config)
 {
     // TODO: Grab the timestamp out of this to update a countdown timer
 
-    var robinUserList = config.robin_user_list;
-    var totalUsers = robinUserList.length;
-    var increaseVotes = robinUserList.filter(function(voter){return voter.vote === "INCREASE";}).length;
-    var abandonVotes = robinUserList.filter(function(voter){return voter.vote === "ABANDON";}).length;
-    var abstainVotes = robinUserList.filter(function(voter){return voter.vote === "NOVOTE";}).length;
-    var continueVotes = robinUserList.filter(function(voter){return voter.vote === "CONTINUE";}).length;
-    var abstainPct = (100 * abstainVotes / totalUsers).toFixed(2);
-    var increasePct = (100 * increaseVotes / totalUsers).toFixed(2);
-    var abandonPct = (100 * abandonVotes / totalUsers).toFixed(2);
-    var continuePct = (100 * continueVotes / totalUsers).toFixed(2);
-
-    // Don't ever send messages. I'm tired of the spam D:
-    if(false)
+    if('undefined' !== typeof config['robin_user_list'])
     {
-        sendMessage("[CHANNEL STATS] " + totalUsers + " USERS | " + increasePct + "% GROW | " + continuePct + "% STAY | " + abandonPct + "% ABANDON | " + abstainPct + "% ABSTAIN");
+        var robinUserList = config.robin_user_list;
+        var totalUsers = robinUserList.length;
+        var increaseVotes = robinUserList.filter(function(voter){return voter.vote === "INCREASE";}).length;
+        var abandonVotes = robinUserList.filter(function(voter){return voter.vote === "ABANDON";}).length;
+        var abstainVotes = robinUserList.filter(function(voter){return voter.vote === "NOVOTE";}).length;
+        var continueVotes = robinUserList.filter(function(voter){return voter.vote === "CONTINUE";}).length;
+        var abstainPct = (100 * abstainVotes / totalUsers).toFixed(2);
+        var increasePct = (100 * increaseVotes / totalUsers).toFixed(2);
+        var abandonPct = (100 * abandonVotes / totalUsers).toFixed(2);
+        var continuePct = (100 * continueVotes / totalUsers).toFixed(2);
+
+        // Don't ever send messages. I'm tired of the spam D:
+        if(false)
+        {
+            sendMessage("[CHANNEL STATS] " + totalUsers + " USERS | " + increasePct + "% GROW | " + continuePct + "% STAY | " + abandonPct + "% ABANDON | " + abstainPct + "% ABSTAIN");
+        }
+
+        // Update the div with that data
+        $('#totalUsers').html(totalUsers);
+
+        $('#increaseVotes').html(increaseVotes);
+        $('#continueVotes').html(continueVotes);
+        $('#abandonVotes').html(abandonVotes);
+        $('#abstainVotes').html(abstainVotes);
+
+        $('#increasePct').html("(" + increasePct + "%)");
+        $('#continuePct').html("(" + continuePct + "%)");
+        $('#abandonPct').html("(" + abandonPct + "%)");
+        $('#abstainPct').html("(" + abstainPct + "%)");
     }
+}
 
-    // Update the div with that data
-    $('#totalUsers').html(totalUsers);
-
-    $('#increaseVotes').html(increaseVotes);
-    $('#continueVotes').html(continueVotes);
-    $('#abandonVotes').html(abandonVotes);
-    $('#abstainVotes').html(abstainVotes);
-
-    $('#increasePct').html("(" + increasePct + "%)");
-    $('#continuePct').html("(" + continuePct + "%)");
-    $('#abandonPct').html("(" + abandonPct + "%)");
-    $('#abstainPct').html("(" + abstainPct + "%)");
-
-    // Recurse every 60 seconds
+function parseStatistics(data)
+{
+    // Setup the recursion at the top so we can just return
+    //   at failtime.
     setTimeout(generateStatisticsQuery, 60 * 1000);
+
+    // There is a call to r.setup in the robin HTML. We're going to try to grab that.
+    //   Wish us luck!
+    var START_TOKEN = "<script type=\"text/javascript\" id=\"config\">r.setup(";
+    var END_TOKEN = ")</script>";
+
+    // If we can't locate the start token, don't bother to update this.
+    //   We'll try again in 60 seconds
+    var index = data.indexOf(START_TOKEN);
+    if(index == -1)
+    {
+        return;
+    }
+    data = data.substring(index + START_TOKEN.length);
+
+    index = data.indexOf(END_TOKEN);
+    if(index == -1)
+    {
+        return;
+    }
+    data = data.substring(0,index);
+
+    // This will throw on failure
+    var config = JSON.parse(data);
+
+    updateStatistics(config);
 }
 
 function generateStatisticsQuery()
 {
     // Query for the userlist
-    $.get("/robin",function(a){
-        // There is a call to r.setup in the robin HTML. We're going to try to grab that.
-        //   Wish us luck!
-        var START_TOKEN = "<script type=\"text/javascript\" id=\"config\">r.setup(";
-        var END_TOKEN = ")</script>";
-        a = a.substring(a.indexOf(START_TOKEN)+START_TOKEN.length);
-        a = a.substring(0,a.indexOf(END_TOKEN));
-        var config = JSON.parse(a);
-        updateStatistics(config);
-    });
+    $.get("/robin",parseStatistics);
 }
 
 (function(){
