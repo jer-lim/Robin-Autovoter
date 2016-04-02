@@ -21,7 +21,7 @@ setTimeout(function(){
     //if (participants == 200) partiText = 200 + " " + $(".robin-user-list-overflow-indicator").text();
     //else partiText = participants;
     
-    var timeRemText = "] " + $("span:contains('Voting will end')").first().text()";
+    var timeRemText = "] " + $("span:contains('Voting will end')").first().text();
     
     sendMessage("/vote grow");
     //if(Math.random() < 0.2) sendMessage("[Robin Autovoter 1.10] Autovoted grow! https://www.reddit.com/r/joinrobin/comments/4cx02w/better_working_automatic_grow_script/");
