@@ -7,7 +7,6 @@
 // @match        https://www.reddit.com/robin*
 // @grant        GM_getValue
 // @grant        GM_setValue
-// @grant        GM_xmlhttpRequest
 // ==/UserScript==
 /* jshint esnext: true */
 
