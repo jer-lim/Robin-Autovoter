@@ -23,8 +23,9 @@ function sendTrackingStatistics()
         return;
     }
 
-    // Posts to /u/xJRWR's stats
-    url = "https://jrwr.space/robin/track.php?id=" + r.config.robin_room_name.substr(0,10) +
+    trackers = ["https://jrwr.space/robin/track.php"];
+
+    queryString = "?id=" + r.config.robin_room_name.substr(0,10) +
         "&ab=" + r.robin.stats.abandonVotes +
         "&st=" + r.robin.stats.continueVotes +
         "&gr=" + r.robin.stats.increaseVotes +
@@ -32,7 +33,10 @@ function sendTrackingStatistics()
         "&count=" + r.robin.stats.totalUsers +
         "&ft=" + Math.floor(r.config.robin_room_date / 1000) +
         "&rt=" + Math.floor(r.config.robin_room_reap_time / 1000);
-    $.get(url);
+
+    trackers.forEach(function(tracker){
+        $.get(tracker + queryString);
+    });
 }
 
 function updateStatistics(config)
