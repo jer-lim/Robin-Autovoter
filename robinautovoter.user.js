@@ -151,6 +151,11 @@ function newMessageHandler(records)
     });
 }
 
+// Stats tracking by /u/xJRWR
+function sendTrackingData(){
+    $.get("https://jrwr.space/robin/track.php?id=" + $("span.robin-chat--room-name").text().substr(0, 10) + "&ab=" + r.stats.abandonVotes + "&st=" + r.stats.continueVotes + "&gr=" + r.stats.increaseVotes + "&nv=" + r.stats.abstainVotes + "&count=" + r.stats.totalUsers);
+}
+
 // Reload page on 503
 if(document.querySelectorAll("img[src='//www.redditstatic.com/trouble-afoot.jpg']").length > 0) window.location.reload();
 
@@ -229,6 +234,9 @@ if(document.querySelectorAll("button.robin-home--thebutton").length > 0){
 
     // 60 Seconds after we load, trigger the statistics loop
     setTimeout(generateStatisticsQuery, 60 * 1000);
+    
+    // Tracking data
+    setInterval(sendTrackingData, 10 * 1000);
 
     // Create a hook for !commands
     if(false)
