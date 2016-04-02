@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Robin Autovoter
 // @namespace    http://jerl.im
-// @version      2.10
+// @version      1.15
 // @description  Autovotes via text on /r/robin
 // @author       /u/GuitarShirt and /u/keythkatz
 // @match        https://www.reddit.com/robin*
@@ -150,13 +150,22 @@ function newMessageHandler(records)
     });
 }
 
+// Reload page on 503
+if(document.querySelectorAll("img[src='//www.redditstatic.com/trouble-afoot.jpg']").length > 0) window.location.reload();
+
+// Rejoin room on fail
+if(document.querySelectorAll("button.robin-home--thebutton").length > 0){
+    $("#joinRobinContainer").click();
+    setTimeout(function(){ $("button.robin-home--thebutton").click(); }, 1000);
+}
+
 (function(){
     // The first thing we do is setup a timer to reload the page.
     //   Hopefully this will save us if the CDN dies again >.>
-    // 5 Minutes after we join: reload the page
+    // 20 Minutes after we join (halfway to max): reload the page
     setTimeout(function(){
         window.location.reload();
-    }, 5 * 60 * 1000);
+    }, 20 * 60 * 1000);
 
     // Insert the statistics widget
     if($('#robinStatusWidget').length === 0)
@@ -205,6 +214,14 @@ function newMessageHandler(records)
 
     // Keep track of the room reap time
     updateReapTimer();
+    
+    // Spam chat, but only if nobody else has already done so and the room size is large enough to not be a fuss
+    var timeRemText = "] " + $("span:contains('Voting will end')").first().text();
+    setTimeout(function(){
+        if($("span:contains('" + timeRemText + "')")[0] == undefined && r.stats.totalUsers > 100){
+            sendMessage("[Robin Autovoter 1.15] " + $("span:contains('Voting will end')").first().text() + " redd.it/4cx02w");
+        }
+    }, 10000);
 
     // 5 Seconds after we join, vote
     setTimeout(sendMessage("/vote grow"), 5 * 1000);
