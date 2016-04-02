@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Robin Autovoter
 // @namespace    http://jerl.im
-// @version      1.19
+// @version      1.20
 // @description  Autovotes via text on /r/robin
 // @author       /u/GuitarShirt and /u/keythkatz
 // @match        https://www.reddit.com/robin*
@@ -29,7 +29,9 @@ function sendTrackingStatistics()
         "&st=" + r.robin.stats.continueVotes +
         "&gr=" + r.robin.stats.increaseVotes +
         "&nv=" + r.robin.stats.abstainVotes +
-        "&count=" + r.robin.stats.totalUsers;
+        "&count=" + r.robin.stats.totalUsers +
+        "&ft=" + Math.floor(r.config.robin_room_date / 1000) +
+        "&rt=" + Math.floor(r.config.robin_room_reap_time / 1000);
     $.get(url);
 }
 
