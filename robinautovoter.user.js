@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Robin Autovoter
 // @namespace    http://jerl.im
-// @version      2.08
+// @version      2.09
 // @description  Autovotes via text on /r/robin
 // @author       /u/GuitarShirt and /u/keythkatz
 // @match        https://www.reddit.com/robin*
@@ -99,11 +99,17 @@ function updateReapTimer()
 
     var currentTime = Math.floor(Date.now() / 1000);
     var reapTime = Math.floor(r.config.robin_room_reap_time / 1000);
-    var dT = reapTime - currentTime;
+    var dT = Math.abs(reapTime - currentTime);
 
     var minutes = Math.floor(dT/60);
     var seconds = "0" + (dT - (minutes * 60));
     seconds = seconds.substr(seconds.length-2); // 0 pad the seconds
+
+    // If we've passed the reap time, put a - in the front.
+    if(reapTime < currentTime)
+    {
+        minutes = "-" + minutes;
+    }
 
     $('#reapTimerMinutes').html(minutes);
     $('#reapTimerSeconds').html(seconds);
