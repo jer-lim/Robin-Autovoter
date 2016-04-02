@@ -1,12 +1,13 @@
 // ==UserScript==
 // @name         Robin Autovoter
 // @namespace    http://jerl.im
-// @version      1.18
+// @version      1.19
 // @description  Autovotes via text on /r/robin
 // @author       /u/GuitarShirt and /u/keythkatz
 // @match        https://www.reddit.com/robin*
 // @grant        GM_getValue
 // @grant        GM_setValue
+// @require      https://cdnjs.cloudflare.com/ajax/libs/jQuery-linkify/1.1.7/jquery.linkify.js
 // ==/UserScript==
 /* jshint esnext: true */
 
@@ -165,13 +166,18 @@ function newMessageHandler(records)
 {
     records.forEach(function(record) {
         var msg = $(record.addedNodes);
-        if(0 === msg.length)
+        if(0 === record.addedNodes.length)
         {
             return;
         }
 
-        user = $(msg[0].children[1]).text();
-        msgText = $(msg[0].children[2]).text();
+        timestamp = $(msg[0]).children('.robin-message--timestamp').text();
+        user = $(msg[0]).children('.robin-message--username').text();
+        msgText = $(msg[0]).children('.robin-message--message').text();
+
+        // Linkify the messages going by
+        $(msg[0]).children('.robin-message--message').linkify();
+
         if(GM_getValue("bang-commands",false))
         {
             handleBangCommands(user,msgText);
