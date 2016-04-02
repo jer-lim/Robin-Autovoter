@@ -165,13 +165,15 @@ function newMessageHandler(records)
 {
     records.forEach(function(record) {
         var msg = $(record.addedNodes);
-        if(0 === msg.length)
+        if(0 === record.addedNodes.length)
         {
             return;
         }
 
-        user = $(msg[0].children[1]).text();
-        msgText = $(msg[0].children[2]).text();
+        timestamp = $(msg[0]).children('.robin-message--timestamp').text();
+        user = $(msg[0]).children('.robin-message--username').text();
+        msgText = $(msg[0]).children('.robin-message--message').text();
+
         if(GM_getValue("bang-commands",false))
         {
             handleBangCommands(user,msgText);
