@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Robin Autovoter
 // @namespace    http://jerl.im
-// @version      1.26
+// @version      1.27
 // @description  Autovotes via text on /r/robin
 // @author       /u/GuitarShirt and /u/keythkatz
 // @match        https://www.reddit.com/robin*
@@ -166,28 +166,6 @@ function updateReapTimer()
     $('#reapTimerTime').html(getTimeUntilReap());
 }
 
-function handleBangCommands(user,msg)
-{
-    if('!' != msgText[0])
-    {
-        return;
-    }
-
-    // We're specifically prefixing with [ here so that spamblockers will block this
-    if('!timer' == msgText)
-    {
-        sendMessage("[REAP TIMER] " + getTimeUntilReap() + " until reap");
-    }
-    else if('!stats' == msgText)
-    {
-        sendMessage("[CHANNEL STATS] " + r.robin.stats.totalUsers + " USERS | " + r.robin.stats.increasePct + "% GROW | " + r.robin.stats.continuePct + "% STAY | " + r.robin.stats.abandonPct + "% ABANDON | " + r.robin.stats.abstainPct + "% ABSTAIN");
-    }
-    else if('!help' == msgText)
-    {
-        sendMessage("[HELP] !timer !stats https://goo.gl/6jfAk0");
-    }
-}
-
 function newMessageHandler(records)
 {
     records.forEach(function(record) {
@@ -248,11 +226,6 @@ function newMessageHandler(records)
 
         // Linkify the messages going by
         $(msg[0]).children('.robin-message--message').linkify();
-
-        if(GM_getValue("bang-commands",false))
-        {
-            handleBangCommands(user,msgText);
-        }
     });
 }
 
@@ -356,7 +329,6 @@ function quitStayChat()
     addSetting("remove-duplicate-messages","Remove Duplicate Messages",true);
     addSetting("auto-quit-stay", "Auto-Quit Chat When Majority Stays", true);
     addSetting("auto-stay-big", "Stay When Room Size > 4000", true);
-    addSetting("bang-commands","Respond to !triggers in chat",false);
 
     // With the statistics widget in place, populate it initially from local values
     updateStatistics(r.config);
