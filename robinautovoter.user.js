@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Robin Autovoter
 // @namespace    http://jerl.im
-// @version      1.24
+// @version      1.25
 // @description  Autovotes via text on /r/robin
 // @author       /u/GuitarShirt and /u/keythkatz
 // @match        https://www.reddit.com/robin*
@@ -304,6 +304,7 @@ function quitStayChat(){
     addSetting("stat-tracking","Report Tracking Statistics",true);
     addSetting("bang-commands","Respond to !triggers in chat",false);
     addSetting("auto-quit-stay", "Auto-quit chats when majority chooses stay", true);
+    addSetting("auto-stay-big", "Stay when room size > 4000", true);
 
     // With the statistics widget in place, populate it initially from local values
     updateStatistics(r.config);
@@ -312,7 +313,13 @@ function quitStayChat(){
     updateReapTimer();
 
     // 5 Seconds after we join, vote
-    setTimeout(function(){sendMessage("/vote grow");}, 5 * 1000);
+    setTimeout(function(){
+        if(r.robin.stats.totalUsers > 4000 && GM_getValue("auto-quit-stay",true)){
+            sendMessage("/vote stay");
+        }else{
+            sendMessage("/vote grow");
+        }
+    }, 5 * 1000);
 
     // 60 Seconds after we load, trigger the statistics loop
     setTimeout(generateStatisticsQuery, 60 * 1000);
