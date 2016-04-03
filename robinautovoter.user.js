@@ -270,6 +270,21 @@ function quitStayChat()
     }
 }
 
+function listenForSubmit() {
+  var $messageBox = $("#robinSendMessage > input[type='text']");
+
+  $messageBox.on( "keypress", function(e) {
+    if (e.which !== 13) return;
+
+    var message = $messageBox.val();
+    if (GM_getValue("fast-clear",true) && message === "/clear") {
+      e.preventDefault();
+      $messageBox.val('');
+      $("#robinChatMessageList").empty();
+    }
+  });
+}
+
 (function(){
 
     // The first thing we do is make sure everything's alright
@@ -345,6 +360,10 @@ function quitStayChat()
     addSetting("remove-duplicate-messages","Remove Duplicate Messages",true);
     addSetting("auto-quit-stay", "Auto-Quit Chat When Majority Stays", true);
     addSetting("auto-stay-big", "Stay When Room Size > 4000", true);
+    addSetting("fast-clear", "/clear without animation", true);
+
+    // monitor message sending
+    listenForSubmit();
 
     // With the statistics widget in place, populate it initially from local values
     updateStatistics(r.config);
