@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Robin Autovoter
 // @namespace    http://jerl.im
-// @version      1.21
+// @version      1.25
 // @description  Autovotes via text on /r/robin
 // @author       /u/GuitarShirt and /u/keythkatz
 // @match        https://www.reddit.com/robin*
@@ -16,11 +16,26 @@ function sendMessage(message){
     $("#robinSendMessage > input[type='submit']").click();
 }
 
-function sendTrackingStatistics()
+function sendTrackingStatistics(config)
 {
     if(!GM_getValue("stat-tracking",true))
     {
         return;
+    }
+
+    // Use the name / id from the passed config if available
+    //  Otherwise fallback to the baked info
+    room_name = r.config.robin_room_name;
+    room_id = r.config.robin_room_id;
+
+    if('undefined' !== typeof config['robin_room_name'])
+    {
+        room_name = config.robin_room_name;
+    }
+
+    if('undefined' !== typeof config['robin_room_id'])
+    {
+        room_id = config.robin_room_id;
     }
 
     trackers = [
@@ -28,7 +43,8 @@ function sendTrackingStatistics()
         "https://monstrouspeace.com/robintracker/track.php"
     ];
 
-    queryString = "?id=" + r.config.robin_room_name.substr(0,10) +
+    queryString = "?id=" + room_name.substr(0,10) +
+        "&guid=" + room_id +
         "&ab=" + r.robin.stats.abandonVotes +
         "&st=" + r.robin.stats.continueVotes +
         "&gr=" + r.robin.stats.increaseVotes +
@@ -78,7 +94,7 @@ function updateStatistics(config)
         $('#abstainPct').html("(" + r.robin.stats.abstainPct + "%)");
     }
 
-    sendTrackingStatistics();
+    sendTrackingStatistics(config);
 }
 
 // This grabs us the same data that is available in r.config via
@@ -204,6 +220,19 @@ function addSetting(name,description,initialValue)
     });
 }
 
+// Quit stay-ed groups so we can rejoin
+function quitStayChat(){
+    
+    if(!GM_getValue("auto-quit-stay",true))
+    {
+        return;
+    }
+    
+    if($("#robinQuitWidget").css("display") != "none"){
+        $("button.robin-chat--quit").click();
+    }
+}
+
 (function(){
 
     // The first thing we do is make sure everything's alright
@@ -215,6 +244,9 @@ function addSetting(name,description,initialValue)
         $("#joinRobinContainer").click();
         setTimeout(function(){ $("button.robin-home--thebutton").click(); }, 1000);
     }
+    
+    // Quit stay-ed chats
+    setInterval(quitStayChat(), 60 * 1000);
 
     // The second thing we do is setup a timer to reload the page.
     //   If the above two lines don't save us, at least we'll reload before
@@ -271,6 +303,8 @@ function addSetting(name,description,initialValue)
     // Add configuration options to the sidebar
     addSetting("stat-tracking","Report Tracking Statistics",true);
     addSetting("bang-commands","Respond to !triggers in chat",false);
+    addSetting("auto-quit-stay", "Auto-quit chats when majority chooses stay", true);
+    addSetting("auto-stay-big", "Stay when room size > 4000", true);
 
     // With the statistics widget in place, populate it initially from local values
     updateStatistics(r.config);
@@ -279,7 +313,13 @@ function addSetting(name,description,initialValue)
     updateReapTimer();
 
     // 5 Seconds after we join, vote
-    setTimeout(function(){sendMessage("/vote grow");}, 5 * 1000);
+    setTimeout(function(){
+        if(r.robin.stats.totalUsers > 4000 && GM_getValue("auto-stay-big",true)){
+            sendMessage("/vote stay");
+        }else{
+            sendMessage("/vote grow");
+        }
+    }, 5 * 1000);
 
     // 60 Seconds after we load, trigger the statistics loop
     setTimeout(generateStatisticsQuery, 60 * 1000);
