@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Robin Autovoter
 // @namespace    http://jerl.im
-// @version      1.27
+// @version      1.28
 // @description  Autovotes via text on /r/robin
 // @author       /u/GuitarShirt and /u/keythkatz
 // @match        https://www.reddit.com/robin*
@@ -176,7 +176,7 @@ function newMessageHandler(records)
         }
 
         timestamp = $(msg[0]).children('.robin-message--timestamp').text();
-        user = $(msg[0]).children('.robin-message--username').text();
+        user = $(msg[0]).children('.robin-message--from').text();
         msgText = $(msg[0]).children('.robin-message--message').text();
 
         if(GM_getValue('remove-votemotes',true))
@@ -226,6 +226,21 @@ function newMessageHandler(records)
 
         // Linkify the messages going by
         $(msg[0]).children('.robin-message--message').linkify();
+
+        if(GM_getValue('highlights',true))
+        {
+            if(!!Notification || Notification.permission === "granted")
+            {
+                if(msgText.toLowerCase().indexOf(r.config.logged.toLowerCase())!=-1)
+                {
+                    $(msg[0]).css('background-color','#ffffdd');
+                    var n = new Notification('Robin Chat',{
+                        icon: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADwAAAA8CAYAAAA6/NlyAAAABGdBTUEAALGPC/xhBQAABJdJREFUaAXtWW1oHEUYnnfvcrvXuyRUW6LU1h9+FcQPLJo7S9v8EDFik2vCIbV+BIrBP4IIFsUip7Sg9Y+aojYt+KNihUhio1IqFmswTVNQS2mFiggi/gh+FNI2t7O3O6/vXlk50+3t7F4+tjgLyczuPDPv+zzvzOy7c4ypSymgFFAKKAWUAkoBpYBSQCmgFFAKKAWUAv8/BeBqoYz9/U3mqamnGLInGOBtwCBDvv9Gf99oCPtSk59+J8PlqiCM+eI1JlqHGOJ9fqSIBDIGg/pdbc/C4GDFD+M9iz1hRAQz3/01UdrgOX3lEsaA4ffEvqwBO5MyMofh6IE/a/HJ2ps41q1892NyZF3vcT2RXV+tMXBMPvMm1V9y770r9oSJwDbP2aCS1rVgwM6SQF8wSO1JTwz9PLtPrAlXcj1rbbTvnO20/z1M6OnUg3B06IJ/+6WnsSYsmLO1nvNeGwDjLKn1BZF18ZrXKW4lbuxfQtO5KOMX7bw7jG9HfpLBxjbC5h9TtFlhNogERXdYPz66IwjntceOMHZuaeHnzr9OZJ+hCAdehFkZCKoBxOo9zPOFgkCxm3bZFTU+1q26SYee1ltk1q87UCwijOt6rucVZ0AI0VuXnU8jRRhsy76DmiZ8mi97tKiblptFlXNdT3PL+ZHqocl6bARim1cPKhctwmZ77y2UMu51syikf41clE62yPZfcMLYUUpa/OQLiJVXiKch62g9HAKbqdde27aghK32whpe/mEfRfTuWicarWtM+112jAUhTJ93aS6sVwXg87RWE7LOyeKSjvGLNFYWGBVXyW/awJFTVNnNDS5VXxfog+EkTB6Y8m30eThvEa4mEH9f2OUIp999dfjYnpNHCPB5mIHmhbCZ3/SIee78++SIdAIRxmkPCwAOS4gPvXuZck4J47rictPib6NwNssYnwPMB8b46Nkw48wZYZ7rfpTI7ibjy8I4EBVL0S3rkCqF7d8wYewoXsfL1nuU7RTCGm8Q/zJMDEm/jjxbDW0mdN70JBF9C5Et9QZciJJ25k+MyYNS38qz/YkUYezouYGbzh5H4MOzB5zve5rKR/Slqx6Paif0x0M5X9jKy85pSiAWg+yovrytCw4N8KiEpaf0pajae2n6PhTVWNR+7mkkpaNvGJ33bIdSSUQdx+0nRbicK/SBu1YZtjZiLFpfGEsmtBebjo1Ife8G2ahLGNs3t3GYoajiRncgAk9TZjNAta8AoQk0kaU1lRWCZSkIWUQtQ8IsIah7ANdM+JUIeBOllKuCHKltp3Mqm2x8piUSu1Ljw8dr2xqtX5Ewby/0CibcbGlZ9RiUwbt6RtsJR0b+CmsUHyi22het222Gq0moW2mmrCDD11Z3dyJHU3aaBJrWGJ4RCTZuZFpPwJf7L4a1I4O/jDCu7Wq2HHiHXjd9bupGgP0pLVGCY8O/ygwYd8x/CFv399wrHPtjBnAjqf8RaKnXDJ+fK+JOqp5//76HzXzhOSK7k04PhiCpdaYlD7brDR7HtiphnuvajiiadR1Ww9hB90dmdSkFlAJKAaWAUkApoBRQCigFQirwD/s1iSsutDEJAAAAAElFTkSuQmCC',
+                        body: user + ': ' + msgText,
+                    });
+                }
+            }
+        }
     });
 }
 
@@ -323,6 +338,7 @@ function quitStayChat()
     }
 
     // Add configuration options to the sidebar
+    addSetting("highlights","Highlight mentions",true);
     addSetting("stat-tracking","Report Tracking Statistics",true);
     addSetting("remove-votemotes","Remove vote emotes",true);
     addSetting("remove-botspam","Remove Old Bot Spam",true);
