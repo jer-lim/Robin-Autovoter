@@ -1,13 +1,14 @@
 // ==UserScript==
 // @name         Robin Autovoter
 // @namespace    http://jerl.im
-// @version      1.25
+// @version      1.26
 // @description  Autovotes via text on /r/robin
 // @author       /u/GuitarShirt and /u/keythkatz
 // @match        https://www.reddit.com/robin*
 // @grant        GM_getValue
 // @grant        GM_setValue
 // @require      https://cdnjs.cloudflare.com/ajax/libs/jQuery-linkify/1.1.7/jquery.linkify.js
+// @require      https://cdnjs.cloudflare.com/ajax/libs/jshashes/1.0.5/hashes.min.js
 // ==/UserScript==
 /* jshint esnext: true */
 
@@ -200,6 +201,51 @@ function newMessageHandler(records)
         user = $(msg[0]).children('.robin-message--username').text();
         msgText = $(msg[0]).children('.robin-message--message').text();
 
+        if(GM_getValue('remove-votemotes',true))
+        {
+            if(-1 != ["voted to GROW","voted to STAY","voted to ABANDON"].indexOf(msgText))
+            {
+                $(msg[0]).remove();
+                return;
+            }
+        }
+
+        if(GM_getValue('remove-botspam',true))
+        {
+            // Remove old autovoter spam (SORRY!)
+            AUTOVOTER_TOKEN = '[Robin Autovoter';
+            if(msgText.substr(0,AUTOVOTER_TOKEN.length)==AUTOVOTER_TOKEN)
+            {
+                $(msg[0]).remove();
+                return;
+            }
+        }
+
+        if(GM_getValue('remove-duplicate-messages',true))
+        {
+            // Make sure the hash list exists
+            if('undefined' === typeof r.robin['msgHashes'])
+            {
+                r.robin.msgHashes = {};
+                r.robin.MD5 = new Hashes.MD5;
+            }
+            // Hash the message.
+            hash = r.robin.MD5.hex(msgText);
+
+            // Does the message match our existing hash list?
+            matched = 'undefined' !== typeof r.robin.msgHashes[hash];
+
+            // Add it to the list or update the timestamp
+            r.robin.msgHashes[hash] = Math.floor(Date.now()/1000);
+
+            if(matched)
+            {
+                // Delete it
+                $(msg[0]).remove();
+                return;
+            }
+        }
+
         // Linkify the messages going by
         $(msg[0]).children('.robin-message--message').linkify();
 
@@ -221,13 +267,16 @@ function addSetting(name,description,initialValue)
 }
 
 // Quit stay-ed groups so we can rejoin
-function quitStayChat(){
-    
+function quitStayChat()
+{
+    // Check back in 60 seconds
+    setInterval(quitStayChat, 60 * 1000);
+
     if(!GM_getValue("auto-quit-stay",true))
     {
         return;
     }
-    
+
     if($("#robinQuitWidget").css("display") != "none"){
         $("button.robin-chat--quit").click();
     }
@@ -244,9 +293,9 @@ function quitStayChat(){
         $("#joinRobinContainer").click();
         setTimeout(function(){ $("button.robin-home--thebutton").click(); }, 1000);
     }
-    
+
     // Quit stay-ed chats
-    setInterval(quitStayChat(), 60 * 1000);
+    setInterval(quitStayChat, 60 * 1000);
 
     // The second thing we do is setup a timer to reload the page.
     //   If the above two lines don't save us, at least we'll reload before
@@ -302,9 +351,12 @@ function quitStayChat(){
 
     // Add configuration options to the sidebar
     addSetting("stat-tracking","Report Tracking Statistics",true);
+    addSetting("remove-votemotes","Remove vote emotes",true);
+    addSetting("remove-botspam","Remove Old Bot Spam",true);
+    addSetting("remove-duplicate-messages","Remove Duplicate Messages",true);
+    addSetting("auto-quit-stay", "Auto-Quit Chat When Majority Stays", true);
+    addSetting("auto-stay-big", "Stay When Room Size > 4000", true);
     addSetting("bang-commands","Respond to !triggers in chat",false);
-    addSetting("auto-quit-stay", "Auto-quit chats when majority chooses stay", true);
-    addSetting("auto-stay-big", "Stay when room size > 4000", true);
 
     // With the statistics widget in place, populate it initially from local values
     updateStatistics(r.config);
