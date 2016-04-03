@@ -220,6 +220,19 @@ function addSetting(name,description,initialValue)
     });
 }
 
+// Quit stay-ed groups so we can rejoin
+function quitStayChat(){
+    
+    if(!GM_getValue("auto-quit-stay",true))
+    {
+        return;
+    }
+    
+    if($("#robinQuitWidget").css("display") != "none"){
+        $("button.robin-chat--quit").click();
+    }
+}
+
 (function(){
 
     // The first thing we do is make sure everything's alright
@@ -231,6 +244,9 @@ function addSetting(name,description,initialValue)
         $("#joinRobinContainer").click();
         setTimeout(function(){ $("button.robin-home--thebutton").click(); }, 1000);
     }
+    
+    // Quit stay-ed chats
+    setInterval(quitStayChat(), 60 * 1000);
 
     // The second thing we do is setup a timer to reload the page.
     //   If the above two lines don't save us, at least we'll reload before
@@ -287,6 +303,7 @@ function addSetting(name,description,initialValue)
     // Add configuration options to the sidebar
     addSetting("stat-tracking","Report Tracking Statistics",true);
     addSetting("bang-commands","Respond to !triggers in chat",false);
+    addSetting("auto-quit-stay", "Auto-quit chats when majority chooses stay", true);
 
     // With the statistics widget in place, populate it initially from local values
     updateStatistics(r.config);
