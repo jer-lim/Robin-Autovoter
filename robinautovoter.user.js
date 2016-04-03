@@ -314,7 +314,7 @@ function quitStayChat(){
 
     // 5 Seconds after we join, vote
     setTimeout(function(){
-        if(r.robin.stats.totalUsers > 4000 && GM_getValue("auto-quit-stay",true)){
+        if(r.robin.stats.totalUsers > 4000 && GM_getValue("auto-stay-big",true)){
             sendMessage("/vote stay");
         }else{
             sendMessage("/vote grow");
