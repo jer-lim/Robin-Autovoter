@@ -221,13 +221,16 @@ function addSetting(name,description,initialValue)
 }
 
 // Quit stay-ed groups so we can rejoin
-function quitStayChat(){
-    
+function quitStayChat()
+{
+    // Check back in 60 seconds
+    setInterval(quitStayChat, 60 * 1000);
+
     if(!GM_getValue("auto-quit-stay",true))
     {
         return;
     }
-    
+
     if($("#robinQuitWidget").css("display") != "none"){
         $("button.robin-chat--quit").click();
     }
@@ -244,9 +247,9 @@ function quitStayChat(){
         $("#joinRobinContainer").click();
         setTimeout(function(){ $("button.robin-home--thebutton").click(); }, 1000);
     }
-    
+
     // Quit stay-ed chats
-    setInterval(quitStayChat(), 60 * 1000);
+    setInterval(quitStayChat, 60 * 1000);
 
     // The second thing we do is setup a timer to reload the page.
     //   If the above two lines don't save us, at least we'll reload before
