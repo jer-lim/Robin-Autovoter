@@ -161,6 +161,23 @@ function updateReapTimer()
     $('#reapTimerTime').html(getTimeUntilReap());
 }
 
+function cleanSpamFilter()
+{
+    // time = Now - 2 minutes
+    time = Math.floor(Date.now()/1000)-120;
+
+    // Filter out anything older than that 2 minute mark
+    oldMsgHashes = r.robin.msgHashes;
+    r.robin.msgHashes = {};
+    $.each(oldMsgHashes,function(h){
+        if(oldMsgHashes[h]>time)
+        {
+            r.robin.msgHashes[h] = oldMsgHashes[h];
+        }
+    });
+    delete oldMsgHashes;
+}
+
 function newMessageHandler(records)
 {
     records.forEach(function(record) {
@@ -266,18 +283,18 @@ function quitStayChat()
 }
 
 function listenForSubmit() {
-  var $messageBox = $("#robinSendMessage > input[type='text']");
+    var $messageBox = $("#robinSendMessage > input[type='text']");
 
-  $messageBox.on( "keypress", function(e) {
-    if (e.which !== 13) return;
+    $messageBox.on( "keypress", function(e) {
+        if (e.which !== 13) return;
 
-    var message = $messageBox.val();
-    if (GM_getValue("fast-clear",true) && message === "/clear") {
-      e.preventDefault();
-      $messageBox.val('');
-      $("#robinChatMessageList").empty();
-    }
-  });
+        var message = $messageBox.val();
+        if (GM_getValue("fast-clear",true) && message === "/clear") {
+            e.preventDefault();
+            $messageBox.val('');
+            $("#robinChatMessageList").empty();
+        }
+    });
 }
 
 (function(){
@@ -377,6 +394,9 @@ function listenForSubmit() {
 
     // 60 Seconds after we load, trigger the statistics loop
     setInterval(generateStatisticsQuery, 60 * 1000);
+
+    // Every 2 minutes, clear out the spam filter
+    setInterval(cleanSpamFilter, 2 * 60 * 1000);
 
     // Create a hook for !commands
     var observer = new MutationObserver(newMessageHandler);
