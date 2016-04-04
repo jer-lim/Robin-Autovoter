@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Robin Autovoter
 // @namespace    http://jerl.im
-// @version      1.30
+// @version      1.31
 // @description  Autovotes via text on /r/robin
 // @author       /u/GuitarShirt and /u/keythkatz
 // @match        https://www.reddit.com/robin*
@@ -10,8 +10,24 @@
 // @grant        GM_setValue
 // @require      https://cdnjs.cloudflare.com/ajax/libs/jQuery-linkify/1.1.7/jquery.linkify.js
 // @require      https://cdnjs.cloudflare.com/ajax/libs/jshashes/1.0.5/hashes.min.js
+// @require      https://raw.githubusercontent.com/marcuswestin/store.js/master/store.min.js
 // ==/UserScript==
 /* jshint esnext: true */
+
+// Spam array to check messages against
+var blockSpam = [
+    "[Robin Autovoter",
+    "voted to GROW",
+    "voted to STAY",
+    "voted to ABANDON",
+    "Current standings [",
+    "Voting will end soon",
+    "777",
+    ">>>",
+    "[Silent Robin",
+    "Available commands:",
+    "[Robin-"
+    ];
 
 function sendMessage(message){
     $("#robinSendMessage > input[type='text']").val(message);
@@ -161,6 +177,11 @@ function updateReapTimer()
     $('#reapTimerTime').html(getTimeUntilReap());
 }
 
+function updateSpamTotal()
+{
+    $('#blockedSpamTotal').html(store.get("totalSpam"));
+}
+
 function updateTitle() {
     setTimeout(updateTitle,5000);
     document.title = "Robin | Users: " + r.robin.stats.totalUsers;
@@ -196,23 +217,16 @@ function newMessageHandler(records)
         user = $(msg[0]).children('.robin-message--from').text();
         msgText = $(msg[0]).children('.robin-message--message').text();
 
-        if(GM_getValue('remove-votemotes',true))
+        if(GM_getValue('remove-spam',true))
         {
-            if(-1 != ["voted to GROW","voted to STAY","voted to ABANDON"].indexOf(msgText))
+            for(var i in blockSpam)
             {
-                $(msg[0]).remove();
-                return;
-            }
-        }
-
-        if(GM_getValue('remove-botspam',true))
-        {
-            // Remove old autovoter spam (SORRY!)
-            AUTOVOTER_TOKEN = '[Robin Autovoter';
-            if(msgText.substr(0,AUTOVOTER_TOKEN.length)==AUTOVOTER_TOKEN)
-            {
-                $(msg[0]).remove();
-                return;
+                if(msgText.indexOf(blockSpam[i])>=0)
+                {
+                    store.set("totalSpam", Number(store.get("totalSpam")) + 1);
+                    $(msg[0]).remove();
+                    return;
+                }
             }
         }
 
@@ -236,6 +250,7 @@ function newMessageHandler(records)
             if(matched)
             {
                 // Delete it
+                store.set("totalSpam", Number(store.get("totalSpam")) + 1);
                 $(msg[0]).remove();
                 return;
             }
@@ -304,6 +319,12 @@ function listenForSubmit() {
 
 (function(){
 
+    console.info("[Robin-Autovoter] Initialising...");
+
+    if (!store.enabled) {
+        console.warn("[Robin-Autovoter] LocalStorage features not supported!");
+    }
+
     // The first thing we do is make sure everything's alright
     // Reload page on 503
     if(document.querySelectorAll("img[src='//www.redditstatic.com/trouble-afoot.jpg']").length > 0) window.location.reload();
@@ -366,6 +387,13 @@ function listenForSubmit() {
             "<span id='reapTimerTime'>??</span>" +
             " until room is reaped" +
             "</span>" +
+            "</div>" +
+            // Total spam messages widget
+            "<div id='robinSpamWidget' class='robin-chat--sidebar-widget'>" +
+            "<span style='font-size: 14px'>" +
+            "<span id='blockedSpamTotal'>??</span>" +
+            " spam messages blocked" +
+            "</span>" +
             "</div>");
     }
     
@@ -382,8 +410,7 @@ function listenForSubmit() {
     // Add configuration options to the sidebar
     addSetting("highlights","Highlight mentions",true);
     addSetting("stat-tracking","Report Tracking Statistics",true);
-    addSetting("remove-votemotes","Remove vote emotes",true);
-    addSetting("remove-botspam","Remove Old Bot Spam",true);
+    addSetting("remove-spam","Remove Generic Spam",true);
     addSetting("remove-duplicate-messages","Remove Duplicate Messages",true);
     addSetting("auto-quit-stay", "Auto-Quit Chat When Majority Stays", true);
     addSetting("auto-stay-big", "Stay When Room Size > 4000", true);
@@ -397,7 +424,10 @@ function listenForSubmit() {
 
     // Keep track of the room reap time
     setInterval(updateReapTimer,1000);
-    
+
+    // Keep track of total spam blocked
+    setInterval(updateSpamTotal,3000);
+
     // Change document title to something a little more informative
     updateTitle();
 
@@ -405,8 +435,10 @@ function listenForSubmit() {
     setTimeout(function(){
         if(r.robin.stats.totalUsers > 4000 && GM_getValue("auto-stay-big",true)){
             sendMessage("/vote stay");
+            console.info("[Robin-Autovoter] voted STAY!");
         }else{
             sendMessage("/vote grow");
+            console.info("[Robin-Autovoter] voted GROW!");
         }
     }, 5 * 1000);
 
@@ -420,5 +452,6 @@ function listenForSubmit() {
     var observer = new MutationObserver(newMessageHandler);
     $('#robinChatMessageList').each(function() {
         observer.observe(this,{childList: true});
+        console.info("[Robin-Autovoter] Hooked into chat");
     });
 })();
