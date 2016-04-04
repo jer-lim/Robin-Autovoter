@@ -451,10 +451,17 @@ function addTextbox(name, description, initialValue, onChange)
     customStyling.setAttribute("id", "Robin-Autovoter-CSS");
     document.body.appendChild(customStyling);
 
-    $("#Robin-Autovoter-CSS").append(".res-nightmode .robin-chat .robin-message {color: #CECECE;}");
-    $("#Robin-Autovoter-CSS").append(".res-nightmode .robin-chat .robin-chat--sidebar {background-color: #262626;}");
-    $("#Robin-Autovoter-CSS").append(".res-nightmode .robin-chat .robin--user-class--self .robin--username { color: #D6D6D6; border: 2px solid white}");
-    $("#Robin-Autovoter-CSS").append(".robin-chat .robin--user-class--self .robin--username { color: black; border: 2px solid black}");
+    $(customStyling)
+      .append(".res-nightmode .robin-chat .robin-message {color: #CECECE;}")
+      .append(".res-nightmode .robin-chat .robin-chat--sidebar {background-color: #262626;}")
+      .append(".res-nightmode .robin-chat .robin--user-class--self .robin--username { color: #D6D6D6; border: 2px solid white}")
+      .append(".robin-chat .robin--user-class--self .robin--username { color: black; border: 2px solid black}")
+
+      // Add Table Styles
+      .append(".robin-chat--sidebar-widget table { box-shadow: 0px 1px 2px 0px rgba(0,0,0,0.2); width: 100%; background: #fff; }")
+      .append(".robin-chat--sidebar-widget td { padding: 5px; }")
+      .append(".robin-chat--sidebar-widget tr { border-bottom: 1px solid #eee; }")
+      .append(".robin-chat--sidebar-widget tr:last-child { border-bottom: none; }")
 
     // Add configuration options to the sidebar
     addSetting("highlights","Highlight mentions",true);
@@ -465,7 +472,7 @@ function addTextbox(name, description, initialValue, onChange)
     addSetting("auto-stay-big", "Stay When Room Size > 4000", true);
     addSetting("fast-clear", "/clear without animation", true);
 
-    addTextbox("channel-filter", "Comma delimited channel filters.", [], channelFilterChange);
+    addTextbox("channel-filter", "Comma delimited channel filters", [], channelFilterChange);
 
     // monitor message sending
     listenForSubmit();
