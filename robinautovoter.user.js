@@ -217,6 +217,13 @@ function newMessageHandler(records)
         user = $(msg[0]).children('.robin-message--from').text();
         msgText = $(msg[0]).children('.robin-message--message').text();
 
+        if (GM_getValue('channel-filter',[]).length > 0)
+        {
+            if (!checkChannelFilter(msgText)) {
+                $(msg[0]).hide();
+            }
+        }
+
         if(GM_getValue('remove-spam',true))
         {
             for(var i in blockSpam)
@@ -317,6 +324,48 @@ function listenForSubmit() {
     });
 }
 
+function checkChannelFilter(message) {
+    var prefixes = GM_getValue("channel-filter", []);
+
+    for (var filter of prefixes)
+    {
+        if (!filter || message.startsWith(filter))
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+function channelFilterChange(e, name, value) {
+    if (!e) return;
+    var prefixes = value.split(",");
+    GM_setValue(name, prefixes);
+
+    $("#robinChatMessageList").children().each(function() {
+        if (prefixes.length === 0) {
+            $(this).show();
+        } else if (!checkChannelFilter($(this).find(".robin-message--message").text())) {
+            $(this).hide();
+        } else {
+            $(this).show();
+        }
+    });
+}
+
+function addTextbox(name, description, initialValue, onChange)
+{
+    currentValue = GM_getValue(name, initialValue).join(",");
+
+    $("#robinDesktopNotifier").append("<label>" + description + "<input type='text' name='robin-" + name + "' " + "></input></label>");
+    var $textbox = $("input[name='robin-" + name + "']");
+    $textbox.on("change", function(e) {
+        onChange(e, name, $(this).val());
+    });
+    $textbox.val(currentValue);
+}
+
 (function(){
 
     console.info("[Robin-Autovoter] Initialising...");
@@ -396,7 +445,7 @@ function listenForSubmit() {
             "</span>" +
             "</div>");
     }
-    
+
     // Add in custom CSS sheet for some fixes to RES nightmode and readability of username
     var customStyling = document.createElement('style');
     customStyling.setAttribute("id", "Robin-Autovoter-CSS");
@@ -415,6 +464,8 @@ function listenForSubmit() {
     addSetting("auto-quit-stay", "Auto-Quit Chat When Majority Stays", true);
     addSetting("auto-stay-big", "Stay When Room Size > 4000", true);
     addSetting("fast-clear", "/clear without animation", true);
+
+    addTextbox("channel-filter", "Comma delimited channel filters.", [], channelFilterChange);
 
     // monitor message sending
     listenForSubmit();
