@@ -104,10 +104,6 @@ function updateStatistics(config)
 //   to follow it like we probably should)
 function parseStatistics(data)
 {
-    // Setup the recursion at the top so we can just return
-    //   at failtime.
-    setTimeout(generateStatisticsQuery, 60 * 1000);
-
     // There is a call to r.setup in the robin HTML. We're going to try to grab that.
     //   Wish us luck!
     var START_TOKEN = "<script type=\"text/javascript\" id=\"config\">r.setup(";
@@ -162,8 +158,6 @@ function getTimeUntilReap()
 
 function updateReapTimer()
 {
-    setTimeout(updateReapTimer,1000);
-
     $('#reapTimerTime').html(getTimeUntilReap());
 }
 
@@ -370,7 +364,7 @@ function listenForSubmit() {
     updateStatistics(r.config);
 
     // Keep track of the room reap time
-    updateReapTimer();
+    setInterval(updateReapTimer,1000);
 
     // 5 Seconds after we join, vote
     setTimeout(function(){
@@ -382,7 +376,7 @@ function listenForSubmit() {
     }, 5 * 1000);
 
     // 60 Seconds after we load, trigger the statistics loop
-    setTimeout(generateStatisticsQuery, 60 * 1000);
+    setInterval(generateStatisticsQuery, 60 * 1000);
 
     // Create a hook for !commands
     var observer = new MutationObserver(newMessageHandler);
