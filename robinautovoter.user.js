@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Robin Autovoter
 // @namespace    http://jerl.im
-// @version      1.28
+// @version      1.30
 // @description  Autovotes via text on /r/robin
 // @author       /u/GuitarShirt and /u/keythkatz
 // @match        https://www.reddit.com/robin*
@@ -159,6 +159,11 @@ function getTimeUntilReap()
 function updateReapTimer()
 {
     $('#reapTimerTime').html(getTimeUntilReap());
+}
+
+function updateTitle() {
+    setTimeout(updateTitle,5000);
+    document.title = "Robin | Users: " + r.robin.stats.totalUsers;
 }
 
 function cleanSpamFilter()
@@ -363,6 +368,16 @@ function listenForSubmit() {
             "</span>" +
             "</div>");
     }
+    
+    // Add in custom CSS sheet for some fixes to RES nightmode and readability of username
+    var customStyling = document.createElement('style');
+    customStyling.setAttribute("id", "Robin-Autovoter-CSS");
+    document.body.appendChild(customStyling);
+
+    $("#Robin-Autovoter-CSS").append(".res-nightmode .robin-chat .robin-message {color: #CECECE;}");
+    $("#Robin-Autovoter-CSS").append(".res-nightmode .robin-chat .robin-chat--sidebar {background-color: #262626;}");
+    $("#Robin-Autovoter-CSS").append(".res-nightmode .robin-chat .robin--user-class--self .robin--username { color: #D6D6D6; border: 2px solid white}");
+    $("#Robin-Autovoter-CSS").append(".robin-chat .robin--user-class--self .robin--username { color: black; border: 2px solid black}");
 
     // Add configuration options to the sidebar
     addSetting("highlights","Highlight mentions",true);
@@ -382,6 +397,9 @@ function listenForSubmit() {
 
     // Keep track of the room reap time
     setInterval(updateReapTimer,1000);
+    
+    // Change document title to something a little more informative
+    updateTitle();
 
     // 5 Seconds after we join, vote
     setTimeout(function(){
