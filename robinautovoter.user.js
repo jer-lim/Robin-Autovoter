@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Robin Autovoter
 // @namespace    http://jerl.im
-// @version      1.32
+// @version      1.33
 // @description  Autovotes via text on /r/robin
 // @author       /u/GuitarShirt and /u/keythkatz
 // @match        https://www.reddit.com/robin*
@@ -309,14 +309,17 @@ function quitStayChat()
     }
 }
 
-function listenForSubmit() {
+function listenForSubmit()
+{
     var $messageBox = $("#robinSendMessage > input[type='text']");
 
-    $messageBox.on( "keypress", function(e) {
+    $messageBox.on( "keypress", function(e)
+    {
         if (e.which !== 13) return;
 
         var message = $messageBox.val();
-        if (GM_getValue("fast-clear",true) && message === "/clear") {
+        if (GM_getValue("fast-clear",true) && message === "/clear")
+        {
             e.preventDefault();
             $messageBox.val('');
             $("#robinChatMessageList").empty();
@@ -324,7 +327,8 @@ function listenForSubmit() {
     });
 }
 
-function checkChannelFilter(message) {
+function checkChannelFilter(message)
+{
     var prefixes = GM_getValue("channel-filter", []);
 
     for (var filter of prefixes)
@@ -338,13 +342,16 @@ function checkChannelFilter(message) {
     return false;
 }
 
-function channelFilterChange(e, name, value) {
+function channelFilterChange(e, name, value)
+{
     if (!e) return;
     var prefixes = value.split(",");
     GM_setValue(name, prefixes);
 
-    $("#robinChatMessageList").children().each(function() {
-        if (prefixes.length === 0) {
+    $("#robinChatMessageList").children().each(function()
+    {
+        if (prefixes.length === 0)
+        {
             $(this).show();
         } else if (!checkChannelFilter($(this).find(".robin-message--message").text())) {
             $(this).hide();
@@ -360,17 +367,64 @@ function addTextbox(name, description, initialValue, onChange)
 
     $("#robinDesktopNotifier").append("<label>" + description + "<input type='text' name='robin-" + name + "' " + "></input></label>");
     var $textbox = $("input[name='robin-" + name + "']");
-    $textbox.on("change", function(e) {
+    $textbox.on("change", function(e)
+    {
         onChange(e, name, $(this).val());
     });
     $textbox.val(currentValue);
+}
+
+function addButton(name, onClick)
+{
+    $("#robinActionsWidget")
+      .find(".robin-chat--buttons")
+      .append("<button class='robin-chat--vote robin-chat--vote-" + name + " robin--vote-class--" + name +"' value='" + name.toUpperCase() +"'><span class='robin-chat--vote-label'>" + name + "</span></button>");
+
+    $(".robin-chat--vote-" + name).on("click", function(e)
+    {
+        if ($(this).hasClass("robin--active"))
+        {
+            onClick(e, null);
+            $(this).removeClass("robin--active");
+        } else
+        {
+            onClick(e, name);
+            $(this).parent().children().removeClass("robin--active");
+            $(this).addClass("robin--active");
+        }
+    });
+}
+
+function buttonClickHandler(e, name)
+{
+    switch (name)
+    {
+        case "settings":
+            $("#robinStatusWidget").hide();
+            $("#robinTimerWidget").hide();
+            $("#robinSpamWidget").hide();
+            $("#robinDesktopNotifier").show();
+            break;
+        case "stats":
+            $("#robinStatusWidget").show();
+            $("#robinTimerWidget").show();
+            $("#robinSpamWidget").show();
+            $("#robinDesktopNotifier").hide();
+            break;
+        default:
+            $("#robinStatusWidget").hide();
+            $("#robinTimerWidget").hide();
+            $("#robinSpamWidget").hide();
+            $("#robinDesktopNotifier").hide();
+    }
 }
 
 (function(){
 
     console.info("[Robin-Autovoter] Initialising...");
 
-    if (!store.enabled) {
+    if (!store.enabled)
+    {
         console.warn("[Robin-Autovoter] LocalStorage features not supported!");
     }
 
@@ -379,7 +433,8 @@ function addTextbox(name, description, initialValue, onChange)
     if(document.querySelectorAll("img[src='//www.redditstatic.com/trouble-afoot.jpg']").length > 0) window.location.reload();
 
     // Rejoin room on fail
-    if(document.querySelectorAll("button.robin-home--thebutton").length > 0){
+    if(document.querySelectorAll("button.robin-home--thebutton").length > 0)
+    {
         $("#joinRobinContainer").click();
         setTimeout(function(){ $("button.robin-home--thebutton").click(); }, 1000);
     }
@@ -391,17 +446,26 @@ function addTextbox(name, description, initialValue, onChange)
     //   If the above two lines don't save us, at least we'll reload before
     //   the timer's up
     // 16 minutes after we join (halfway to max): reload the page
-    setTimeout(function(){
+    setTimeout(function()
+    {
         window.location.reload();
     }, 16 * 60 * 1000);
+
+    $("#robinVoteWidget").after(
+        // Collapsible Buttons
+        "<div id='robinActionsWidget' class='robin-chat--sidebar-widget robin-chat--vote-widget' style='display: block;'>" +
+        "<div class='robin-chat--buttons'>" +
+        "</div>" +
+        "</div>"
+    );
 
     // Insert the statistics widget
     if($('#robinStatusWidget').length === 0)
     {
         // TODO: This needs some stylesheet love
-        $("#robinDesktopNotifier").after(
+        $("#robinDesktopNotifier").hide().after(
             // Statistics Widget
-            "<div id='robinStatusWidget' class='robin-chat--sidebar-widget'>" +
+            "<div id='robinStatusWidget' class='robin-chat--sidebar-widget' style='display:none;'>" +
             "<table style='font-size: 14px;'>" +
             "<tr>" +
             "<td style='padding-right: 3px;'>Total</td>" +
@@ -430,19 +494,25 @@ function addTextbox(name, description, initialValue, onChange)
             "</tr>" +
             "</table>" +
             "</div>" +
+
             // Reap timer widget
-            "<div id='robinTimerWidget' class='robin-chat--sidebar-widget'>" +
-            "<span style='font-size: 14px'>" +
+            "<div id='robinTimerWidget' class='robin-chat--sidebar-widget' style='display:none;'>" +
+            "<div class='robin-chat--vote robin-chat--vote-reap-time robin--vote-class--reap-time' value='REAPTIME'>" +
+            "<span class='robin-chat--vote-label'>" +
             "<span id='reapTimerTime'>??</span>" +
             " until room is reaped" +
             "</span>" +
             "</div>" +
+            "</div>" +
+
             // Total spam messages widget
-            "<div id='robinSpamWidget' class='robin-chat--sidebar-widget'>" +
-            "<span style='font-size: 14px'>" +
+            "<div id='robinSpamWidget' class='robin-chat--sidebar-widget' style='display:none;'>" +
+            "<div class='robin-chat--vote robin-chat--vote-blocked-spam robin--vote-class--blocked-spam' value='BLOCKEDSPAM'>" +
+            "<span class='robin-chat--vote-label'>" +
             "<span id='blockedSpamTotal'>??</span>" +
             " spam messages blocked" +
             "</span>" +
+            "</div>" +
             "</div>");
     }
 
@@ -457,11 +527,17 @@ function addTextbox(name, description, initialValue, onChange)
         .append(".res-nightmode .robin-chat .robin--user-class--self .robin--username { color: #D6D6D6; border: 2px solid white}")
         .append(".robin-chat .robin--user-class--self .robin--username { color: black; border: 2px solid black}")
 
-    // Add Table Styles
+        // Add Table Styles
         .append(".robin-chat--sidebar-widget table { box-shadow: 0px 1px 2px 0px rgba(0,0,0,0.2); width: 100%; background: #fff; }")
         .append(".robin-chat--sidebar-widget td { padding: 5px; }")
         .append(".robin-chat--sidebar-widget tr { border-bottom: 1px solid #eee; }")
         .append(".robin-chat--sidebar-widget tr:last-child { border-bottom: none; }")
+
+        // Add Stat Styles
+        .append(".robin-chat .robin--vote-class--reap-time:hover { background-color: #fff; }")
+        .append(".robin-chat .robin--vote-class--reap-time:active { background-color: #fff; box-shadow: 0px 1px 2px 0px rgba(0,0,0,0.2); }")
+        .append(".robin-chat .robin--vote-class--blocked-spam:hover { background-color: #fff; }")
+        .append(".robin-chat .robin--vote-class--blocked-spam:active { background-color: #fff; box-shadow: 0px 1px 2px 0px rgba(0,0,0,0.2); }")
 
     // Add configuration options to the sidebar
     addSetting("highlights","Highlight mentions",true);
@@ -473,6 +549,9 @@ function addTextbox(name, description, initialValue, onChange)
     addSetting("fast-clear", "/clear without animation", true);
 
     addTextbox("channel-filter", "Comma delimited channel filters", [], channelFilterChange);
+
+    addButton("settings", buttonClickHandler);
+    addButton("stats", buttonClickHandler);
 
     // monitor message sending
     listenForSubmit();
@@ -490,7 +569,8 @@ function addTextbox(name, description, initialValue, onChange)
     updateTitle();
 
     // 5 Seconds after we join, vote
-    setTimeout(function(){
+    setTimeout(function()
+    {
         if(r.robin.stats.totalUsers > 4000 && GM_getValue("auto-stay-big",true)){
             sendMessage("/vote stay");
             console.info("[Robin-Autovoter] voted STAY!");
@@ -508,7 +588,8 @@ function addTextbox(name, description, initialValue, onChange)
 
     // Create a hook for !commands
     var observer = new MutationObserver(newMessageHandler);
-    $('#robinChatMessageList').each(function() {
+    $('#robinChatMessageList').each(function()
+    {
         observer.observe(this,{childList: true});
         console.info("[Robin-Autovoter] Hooked into chat");
     });
