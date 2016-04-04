@@ -1,10 +1,11 @@
 // ==UserScript==
 // @name         Robin Autovoter
 // @namespace    http://jerl.im
-// @version      1.26
+// @version      1.28
 // @description  Autovotes via text on /r/robin
 // @author       /u/GuitarShirt and /u/keythkatz
 // @match        https://www.reddit.com/robin*
+// @updateURL    https://github.com/keythkatz/Robin-Autovoter/raw/master/robinautovoter.user.js
 // @grant        GM_getValue
 // @grant        GM_setValue
 // @require      https://cdnjs.cloudflare.com/ajax/libs/jQuery-linkify/1.1.7/jquery.linkify.js
@@ -166,28 +167,6 @@ function updateReapTimer()
     $('#reapTimerTime').html(getTimeUntilReap());
 }
 
-function handleBangCommands(user,msg)
-{
-    if('!' != msgText[0])
-    {
-        return;
-    }
-
-    // We're specifically prefixing with [ here so that spamblockers will block this
-    if('!timer' == msgText)
-    {
-        sendMessage("[REAP TIMER] " + getTimeUntilReap() + " until reap");
-    }
-    else if('!stats' == msgText)
-    {
-        sendMessage("[CHANNEL STATS] " + r.robin.stats.totalUsers + " USERS | " + r.robin.stats.increasePct + "% GROW | " + r.robin.stats.continuePct + "% STAY | " + r.robin.stats.abandonPct + "% ABANDON | " + r.robin.stats.abstainPct + "% ABSTAIN");
-    }
-    else if('!help' == msgText)
-    {
-        sendMessage("[HELP] !timer !stats https://goo.gl/6jfAk0");
-    }
-}
-
 function newMessageHandler(records)
 {
     records.forEach(function(record) {
@@ -198,7 +177,7 @@ function newMessageHandler(records)
         }
 
         timestamp = $(msg[0]).children('.robin-message--timestamp').text();
-        user = $(msg[0]).children('.robin-message--username').text();
+        user = $(msg[0]).children('.robin-message--from').text();
         msgText = $(msg[0]).children('.robin-message--message').text();
 
         if(GM_getValue('remove-votemotes',true))
@@ -249,9 +228,19 @@ function newMessageHandler(records)
         // Linkify the messages going by
         $(msg[0]).children('.robin-message--message').linkify();
 
-        if(GM_getValue("bang-commands",false))
+        if(GM_getValue('highlights',true))
         {
-            handleBangCommands(user,msgText);
+            if(!!Notification || Notification.permission === "granted")
+            {
+                if(msgText.toLowerCase().indexOf(r.config.logged.toLowerCase())!=-1)
+                {
+                    $(msg[0]).css('background-color','#ffffdd');
+                    var n = new Notification('Robin Chat',{
+                        icon: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADwAAAA8CAYAAAA6/NlyAAAABGdBTUEAALGPC/xhBQAABJdJREFUaAXtWW1oHEUYnnfvcrvXuyRUW6LU1h9+FcQPLJo7S9v8EDFik2vCIbV+BIrBP4IIFsUip7Sg9Y+aojYt+KNihUhio1IqFmswTVNQS2mFiggi/gh+FNI2t7O3O6/vXlk50+3t7F4+tjgLyczuPDPv+zzvzOy7c4ypSymgFFAKKAWUAkoBpYBSQCmgFFAKKAWUAv8/BeBqoYz9/U3mqamnGLInGOBtwCBDvv9Gf99oCPtSk59+J8PlqiCM+eI1JlqHGOJ9fqSIBDIGg/pdbc/C4GDFD+M9iz1hRAQz3/01UdrgOX3lEsaA4ffEvqwBO5MyMofh6IE/a/HJ2ps41q1892NyZF3vcT2RXV+tMXBMPvMm1V9y770r9oSJwDbP2aCS1rVgwM6SQF8wSO1JTwz9PLtPrAlXcj1rbbTvnO20/z1M6OnUg3B06IJ/+6WnsSYsmLO1nvNeGwDjLKn1BZF18ZrXKW4lbuxfQtO5KOMX7bw7jG9HfpLBxjbC5h9TtFlhNogERXdYPz66IwjntceOMHZuaeHnzr9OZJ+hCAdehFkZCKoBxOo9zPOFgkCxm3bZFTU+1q26SYee1ltk1q87UCwijOt6rucVZ0AI0VuXnU8jRRhsy76DmiZ8mi97tKiblptFlXNdT3PL+ZHqocl6bARim1cPKhctwmZ77y2UMu51syikf41clE62yPZfcMLYUUpa/OQLiJVXiKch62g9HAKbqdde27aghK32whpe/mEfRfTuWicarWtM+112jAUhTJ93aS6sVwXg87RWE7LOyeKSjvGLNFYWGBVXyW/awJFTVNnNDS5VXxfog+EkTB6Y8m30eThvEa4mEH9f2OUIp999dfjYnpNHCPB5mIHmhbCZ3/SIee78++SIdAIRxmkPCwAOS4gPvXuZck4J47rictPib6NwNssYnwPMB8b46Nkw48wZYZ7rfpTI7ibjy8I4EBVL0S3rkCqF7d8wYewoXsfL1nuU7RTCGm8Q/zJMDEm/jjxbDW0mdN70JBF9C5Et9QZciJJ25k+MyYNS38qz/YkUYezouYGbzh5H4MOzB5zve5rKR/Slqx6Paif0x0M5X9jKy85pSiAWg+yovrytCw4N8KiEpaf0pajae2n6PhTVWNR+7mkkpaNvGJ33bIdSSUQdx+0nRbicK/SBu1YZtjZiLFpfGEsmtBebjo1Ife8G2ahLGNs3t3GYoajiRncgAk9TZjNAta8AoQk0kaU1lRWCZSkIWUQtQ8IsIah7ANdM+JUIeBOllKuCHKltp3Mqm2x8piUSu1Ljw8dr2xqtX5Ewby/0CibcbGlZ9RiUwbt6RtsJR0b+CmsUHyi22het222Gq0moW2mmrCDD11Z3dyJHU3aaBJrWGJ4RCTZuZFpPwJf7L4a1I4O/jDCu7Wq2HHiHXjd9bupGgP0pLVGCY8O/ygwYd8x/CFv399wrHPtjBnAjqf8RaKnXDJ+fK+JOqp5//76HzXzhOSK7k04PhiCpdaYlD7brDR7HtiphnuvajiiadR1Ww9hB90dmdSkFlAJKAaWAUkApoBRQCigFQirwD/s1iSsutDEJAAAAAElFTkSuQmCC',
+                        body: user + ': ' + msgText,
+                    });
+                }
+            }
         }
     });
 }
@@ -280,6 +269,21 @@ function quitStayChat()
     if($("#robinQuitWidget").css("display") != "none"){
         $("button.robin-chat--quit").click();
     }
+}
+
+function listenForSubmit() {
+  var $messageBox = $("#robinSendMessage > input[type='text']");
+
+  $messageBox.on( "keypress", function(e) {
+    if (e.which !== 13) return;
+
+    var message = $messageBox.val();
+    if (GM_getValue("fast-clear",true) && message === "/clear") {
+      e.preventDefault();
+      $messageBox.val('');
+      $("#robinChatMessageList").empty();
+    }
+  });
 }
 
 (function(){
@@ -350,13 +354,17 @@ function quitStayChat()
     }
 
     // Add configuration options to the sidebar
+    addSetting("highlights","Highlight mentions",true);
     addSetting("stat-tracking","Report Tracking Statistics",true);
     addSetting("remove-votemotes","Remove vote emotes",true);
     addSetting("remove-botspam","Remove Old Bot Spam",true);
     addSetting("remove-duplicate-messages","Remove Duplicate Messages",true);
     addSetting("auto-quit-stay", "Auto-Quit Chat When Majority Stays", true);
     addSetting("auto-stay-big", "Stay When Room Size > 4000", true);
-    addSetting("bang-commands","Respond to !triggers in chat",false);
+    addSetting("fast-clear", "/clear without animation", true);
+
+    // monitor message sending
+    listenForSubmit();
 
     // With the statistics widget in place, populate it initially from local values
     updateStatistics(r.config);

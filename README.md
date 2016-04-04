@@ -14,8 +14,8 @@ https://github.com/keythkatz/Robin-Autovoter/raw/master/robinautovoter.user.js
 * Display current room statistics and votes (even beyond 200!)
 * Linkify links in chat
 * Refresh on CDN failure
-* Joins a new room if your room if the room doesn't continue
-* Optionally Reports Tracking Statistics ([Leaderboard](https://monstrouspeace.com/robintracker/table.php))
-* Optionally Respond to !stats and !timer
+* Joins a new room if your room doesn't continue
+* Reports Tracking Statistics ([Leaderboard](https://monstrouspeace.com/robintracker/table.php))
+* Basic Spam Blocking
 
 ![1](http://i.imgur.com/q4pokMC.jpg)
