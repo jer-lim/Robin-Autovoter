@@ -1,9 +1,9 @@
 // ==UserScript==
-// @name         Robin Autovoter
+// @name         Robin Autovoter modified tabbed chat
 // @namespace    http://jerl.im
 // @version      1.32
 // @description  Autovotes via text on /r/robin
-// @author       /u/GuitarShirt and /u/keythkatz
+// @author       /u/GuitarShirt and /u/keythkatz, modified by /u/mythriz for tabbed chat
 // @match        https://www.reddit.com/robin*
 // @updateURL    https://github.com/keythkatz/Robin-Autovoter/raw/master/robinautovoter.user.js
 // @grant        GM_getValue
@@ -325,15 +325,15 @@ function listenForSubmit() {
 }
 
 function checkChannelFilter(message) {
-    var prefixes = GM_getValue("channel-filter", []);
+    var filter = GM_getValue("current-channel-filter", undefined);
 
-    for (var filter of prefixes)
+    //for (var filter of prefixes)
+    //{
+    if (!filter || message.startsWith(filter))
     {
-        if (!filter || message.startsWith(filter))
-        {
-            return true;
-        }
+        return true;
     }
+    //}
 
     return false;
 }
@@ -343,15 +343,45 @@ function channelFilterChange(e, name, value) {
     var prefixes = value.split(",");
     GM_setValue(name, prefixes);
 
-    $("#robinChatMessageList").children().each(function() {
-        if (prefixes.length === 0) {
-            $(this).show();
-        } else if (!checkChannelFilter($(this).find(".robin-message--message").text())) {
-            $(this).hide();
-        } else {
-            $(this).show();
+    $("#robinChatTabs").remove();
+    $("#robinChatWindow").before( '<div id="robinChatTabs"></div>' );
+    $("#robinChatTabs").append( '<button class="robin-chat--tab" name="current-channel-prefix" value="">(No filter)</button>' );
+
+    if (value != "") {
+        GM_setValue("current-channel-filter",prefixes[0]);
+        for (var index = 0; index < prefixes.length; index++) {
+            $("#robinChatTabs").append( '<button class="robin-chat--tab" name="current-channel-prefix" value="'+prefixes[index]+'">'+prefixes[index]+'</button>' );
+            console.log("Adding button for: "+prefixes[index]);
         }
+    } else GM_setValue("current-channel-filter",undefined);
+
+    $("button[name='current-channel-prefix']").on("click", function(e){
+        var filter = GM_getValue("current-channel-filter","");
+        var $messageBox = $("#robinSendMessage > input[type='text']");
+        if ($messageBox.val().startsWith(filter)) {
+            $messageBox.val($messageBox.val().replace(filter,'').trim());
+        }
+        //console.log("Now filtering on "+$(e.target).val()+"...");
+        GM_setValue("current-channel-filter",$(e.target).val());
+        if ($(e.target).val() !== '')
+            $messageBox.val( $(e.target).val()+" "+$messageBox.val() );
+
+        $(".robin-chat--tab-selected").removeClass('robin-chat--tab-selected');
+        $(e.target).addClass('robin-chat--tab-selected');
+        $("#robinChatMessageList").children().each(function() {
+            if ($(e.target).val() == "") {
+                $(this).show();
+            } else if (!checkChannelFilter($(this).find(".robin-message--message").text())) {
+                $(this).hide();
+            } else {
+                $(this).show();
+            }
+        });
+        $("#robinChatWindow").scrollTop( $("#robinChatWindow")[0].scrollHeight );
+        //console.log("Done filtering.");
     });
+
+    $("button[name='current-channel-prefix']").first().click();
 }
 
 function addTextbox(name, description, initialValue, onChange)
@@ -462,6 +492,9 @@ function addTextbox(name, description, initialValue, onChange)
         .append(".robin-chat--sidebar-widget td { padding: 5px; }")
         .append(".robin-chat--sidebar-widget tr { border-bottom: 1px solid #eee; }")
         .append(".robin-chat--sidebar-widget tr:last-child { border-bottom: none; }")
+        .append("#robinChatTabs { height: 20px; border-bottom: 1px solid grey; }")
+        .append(".robin-chat--tab { height: 21px; background: #d7d7d2; border: 1px solid grey; border-radius: 2px 2px 0 0; margin: 0 5px; outline: none;}")
+        .append(".robin-chat--tab-selected { background: white; border-bottom: 0; }")
 
     // Add configuration options to the sidebar
     addSetting("highlights","Highlight mentions",true);
@@ -473,7 +506,15 @@ function addTextbox(name, description, initialValue, onChange)
     addSetting("fast-clear", "/clear without animation", true);
 
     addTextbox("channel-filter", "Comma delimited channel filters", [], channelFilterChange);
+    channelFilterChange(true,"channel-filter",GM_getValue("channel-filter",[]).join(','));
 
+    $("#robinSendMessage > input[type='text']").on("focus keyup", function(e) {
+        var filter = GM_getValue("current-channel-filter","");
+        var $messageBox = $("#robinSendMessage > input[type='text']");
+        if (filter !== "" && !$messageBox.val().startsWith(filter)) {
+            $messageBox.val(filter+" "+$messageBox.val());
+        }
+    } );
     // monitor message sending
     listenForSubmit();
 
