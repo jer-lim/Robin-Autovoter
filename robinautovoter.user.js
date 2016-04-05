@@ -159,17 +159,25 @@ function getTimeUntilReap()
     var reapTime = Math.floor(r.config.robin_room_reap_time / 1000);
     var dT = Math.abs(reapTime - currentTime);
 
-    var minutes = Math.floor(dT/60);
+    var hours = Math.floor(dT / (60 * 60));
+    var minutes = Math.floor((dT - (hours * 60 * 60))/60);
     var seconds = "0" + (dT - (minutes * 60));
     seconds = seconds.substr(seconds.length-2); // 0 pad the seconds
+
+    var time = String(minutes) + "m" + seconds + "s";
+
+    if(hours > 0)
+    {
+        time = String(hours) + "h" + time;
+    }
 
     // If we've passed the reap time, put a - in the front.
     if(reapTime < currentTime)
     {
-        minutes = "-" + minutes;
+        time = "-" + time;
     }
 
-    return "" + minutes + "m" + seconds + "s";
+    return time;
 }
 
 function updateReapTimer()
