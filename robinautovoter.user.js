@@ -29,6 +29,10 @@ var blockSpam = [
     "[Robin-"
 ];
 
+// Number of Messages allowed to be in the list
+// TODO user specified?
+var messageCountLimit = 500;
+
 function sendMessage(message){
     $("#robinSendMessage > input[type='text']").val(message);
     $("#robinSendMessage > input[type='submit']").click();
@@ -221,13 +225,29 @@ function newMessageHandler(records)
             return;
         }
 
+        // Keeps the message count low
+        if (GM_getValue('message-limit',true))
+        {
+            var $children = msg.parent().children();
+            var numberToRemove = $children.length - messageCountLimit;
+            // only start removing when we have some to remove
+            if (numberToRemove > 20)
+            {
+                $children
+                  // keep around first robin messages
+                  .slice(3, numberToRemove + 3)
+                  .remove();
+            }
+        }
+
         timestamp = $(msg[0]).children('.robin-message--timestamp').text();
         user = $(msg[0]).children('.robin-message--from').text();
         msgText = $(msg[0]).children('.robin-message--message').text();
 
         if (GM_getValue('channel-filter',[]).length > 0)
         {
-            if (!checkChannelFilter(msgText)) {
+            if (!checkChannelFilter(msgText))
+            {
                 $(msg[0]).hide();
             }
         }
@@ -555,6 +575,7 @@ function buttonClickHandler(e, name)
     addSetting("auto-quit-stay", "Auto-Quit Chat When Majority Stays", true);
     addSetting("auto-stay-big", "Stay When Room Size > 4000", true);
     addSetting("fast-clear", "/clear without animation", true);
+    addSetting("message-limit", "Limit messages to latest 500", true);
 
     addTextbox("channel-filter", "Comma delimited channel filters", [], channelFilterChange);
 
