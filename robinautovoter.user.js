@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Robin Autovoter
 // @namespace    http://jerl.im
-// @version      1.34
+// @version      1.35
 // @description  Autovotes via text on /r/robin
 // @author       /u/GuitarShirt and /u/keythkatz
 // @match        https://www.reddit.com/robin*
@@ -32,6 +32,10 @@ var blockSpam = [
 // Number of Messages allowed to be in the list
 // TODO user specified?
 var messageCountLimit = 500;
+
+// This isn't persistent
+// TODO draw a list of muted users
+var mutedUsers = {};
 
 function sendMessage(message){
     $("#robinSendMessage > input[type='text']").val(message);
@@ -244,12 +248,10 @@ function newMessageHandler(records)
         user = $(msg[0]).children('.robin-message--from').text();
         msgText = $(msg[0]).children('.robin-message--message').text();
 
-        if (GM_getValue('channel-filter',[]).length > 0)
+        if (GM_getValue('mute-users',true) && mutedUsers[user.trim()])
         {
-            if (!checkChannelFilter(msgText))
-            {
-                $(msg[0]).hide();
-            }
+            $(msg[0]).remove();
+            return;
         }
 
         if(GM_getValue('remove-spam',true))
@@ -288,6 +290,14 @@ function newMessageHandler(records)
                 store.set("totalSpam", Number(store.get("totalSpam")) + 1);
                 $(msg[0]).remove();
                 return;
+            }
+        }
+
+        if (GM_getValue('channel-filter',[]).length > 0)
+        {
+            if (!checkChannelFilter(msgText))
+            {
+                $(msg[0]).hide();
             }
         }
 
@@ -450,6 +460,27 @@ function buttonClickHandler(e, name)
     }
 }
 
+// for muting of users
+function listenForUsernameClick()
+{
+    $("body").on("click", ".robin--username", function()
+    {
+        var name = $(this).text().trim();
+
+        var $userNames = $(".robin--username:contains(" + name + ")");
+
+        if (mutedUsers[name])
+        { // Unmute
+            $userNames.css({textDecoration: "none"});
+            delete mutedUsers[name];
+        } else
+        { // Mute
+            $userNames.css({textDecoration: "line-through"});
+            mutedUsers[name] = true;
+        }
+    });
+}
+
 (function(){
 
     console.info("[Robin-Autovoter] Initialising...");
@@ -577,6 +608,7 @@ function buttonClickHandler(e, name)
     addSetting("auto-stay-big", "Stay When Room Size > 4000", true);
     addSetting("fast-clear", "/clear without animation", true);
     addSetting("message-limit", "Limit messages to latest 500", true);
+    addSetting("mute-users", "Left click username to mute", true);
 
     addTextbox("channel-filter", "Comma delimited channel filters", [], channelFilterChange);
 
@@ -587,6 +619,9 @@ function buttonClickHandler(e, name)
 
     // monitor message sending
     listenForSubmit();
+
+    // listen for clicks to mute
+    listenForUsernameClick()
 
     // With the statistics widget in place, populate it initially from local values
     updateStatistics(r.config);
