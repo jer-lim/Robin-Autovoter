@@ -401,29 +401,21 @@ function buttonClickHandler(e, name)
     {
         case "settings":
             $("#robinStatusWidget").hide();
-            $("#robinTimerWidget").hide();
-            $("#robinSpamWidget").hide();
             $("#robinDesktopNotifier").show();
             $("#robinUserList").hide();
             break;
         case "stats":
             $("#robinStatusWidget").show();
-            $("#robinTimerWidget").show();
-            $("#robinSpamWidget").show();
             $("#robinDesktopNotifier").hide();
             $("#robinUserList").hide();
             break;
         case "users":
             $("#robinStatusWidget").hide();
-            $("#robinTimerWidget").hide();
-            $("#robinSpamWidget").hide();
             $("#robinDesktopNotifier").hide();
             $("#robinUserList").show();
             break;
         default:
             $("#robinStatusWidget").hide();
-            $("#robinTimerWidget").hide();
-            $("#robinSpamWidget").hide();
             $("#robinDesktopNotifier").hide();
             $("#robinUserList").hide();
     }
@@ -476,6 +468,24 @@ function buttonClickHandler(e, name)
         $("#robinDesktopNotifier").hide().after(
             // Statistics Widget
             "<div id='robinStatusWidget' class='robin-chat--sidebar-widget' style='display:none;'>" +
+
+            // Reap timer widget
+            "<div class='robin-chat--vote robin-chat--stat-widget robin-chat--vote-reap-time robin--vote-class--reap-time' value='REAPTIME'>" +
+            "<span class='robin-chat--vote-label'>" +
+            "<span id='reapTimerTime'>??</span>" +
+            " until room is reaped" +
+            "</span>" +
+            "</div>" +
+
+            // Total spam messages widget
+            "<div class='robin-chat--vote robin-chat--stat-widget robin-chat--vote-blocked-spam robin--vote-class--blocked-spam' value='BLOCKEDSPAM'>" +
+            "<span class='robin-chat--vote-label'>" +
+            "<span id='blockedSpamTotal'>??</span>" +
+            " spam messages blocked" +
+            "</span>" +
+            "</div>" +
+
+            // Vote Stat Table
             "<table style='font-size: 14px;'>" +
             "<tr>" +
             "<td style='padding-right: 3px;'>Total</td>" +
@@ -503,26 +513,7 @@ function buttonClickHandler(e, name)
             "<td id='abstainPct'></td>" +
             "</tr>" +
             "</table>" +
-            "</div>" +
 
-            // Reap timer widget
-            "<div id='robinTimerWidget' class='robin-chat--sidebar-widget' style='display:none;'>" +
-            "<div class='robin-chat--vote robin-chat--vote-reap-time robin--vote-class--reap-time' value='REAPTIME'>" +
-            "<span class='robin-chat--vote-label'>" +
-            "<span id='reapTimerTime'>??</span>" +
-            " until room is reaped" +
-            "</span>" +
-            "</div>" +
-            "</div>" +
-
-            // Total spam messages widget
-            "<div id='robinSpamWidget' class='robin-chat--sidebar-widget' style='display:none;'>" +
-            "<div class='robin-chat--vote robin-chat--vote-blocked-spam robin--vote-class--blocked-spam' value='BLOCKEDSPAM'>" +
-            "<span class='robin-chat--vote-label'>" +
-            "<span id='blockedSpamTotal'>??</span>" +
-            " spam messages blocked" +
-            "</span>" +
-            "</div>" +
             "</div>");
     }
 
@@ -544,10 +535,9 @@ function buttonClickHandler(e, name)
         .append(".robin-chat--sidebar-widget tr:last-child { border-bottom: none; }")
 
         // Add Stat Styles
-        .append(".robin-chat .robin--vote-class--reap-time:hover { background-color: #fff; }")
-        .append(".robin-chat .robin--vote-class--reap-time:active { background-color: #fff; box-shadow: 0px 1px 2px 0px rgba(0,0,0,0.2); }")
-        .append(".robin-chat .robin--vote-class--blocked-spam:hover { background-color: #fff; }")
-        .append(".robin-chat .robin--vote-class--blocked-spam:active { background-color: #fff; box-shadow: 0px 1px 2px 0px rgba(0,0,0,0.2); }")
+        .append(".robin-chat .robin-chat--stat-widget:hover { background-color: #fff; }")
+        .append(".robin-chat .robin-chat--stat-widget:active { background-color: #fff; box-shadow: 0px 1px 2px 0px rgba(0,0,0,0.2); }")
+        .append(".robin-chat .robin-chat--stat-widget { margin-left: 0px; width: 100%; }")
 
     // Add configuration options to the sidebar
     addSetting("highlights","Highlight mentions",true);
