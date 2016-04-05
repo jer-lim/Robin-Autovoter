@@ -18,5 +18,6 @@ https://github.com/keythkatz/Robin-Autovoter/raw/master/robinautovoter.user.js
 * Reports Tracking Statistics ([Leaderboard](https://monstrouspeace.com/robintracker/table.php))
 * Basic Spam Blocking
 * Channel Filtering
+* Mute Users
 
 ![1](http://i.imgur.com/kgTFCMv.gif)
