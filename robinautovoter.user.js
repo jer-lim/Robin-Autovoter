@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Robin Autovoter
 // @namespace    http://jerl.im
-// @version      1.33
+// @version      1.34
 // @description  Autovotes via text on /r/robin
 // @author       /u/GuitarShirt and /u/keythkatz
 // @match        https://www.reddit.com/robin*
@@ -28,6 +28,10 @@ var blockSpam = [
     "Available commands:",
     "[Robin-"
 ];
+
+// Number of Messages allowed to be in the list
+// TODO user specified?
+var messageCountLimit = 500;
 
 function sendMessage(message){
     $("#robinSendMessage > input[type='text']").val(message);
@@ -159,17 +163,25 @@ function getTimeUntilReap()
     var reapTime = Math.floor(r.config.robin_room_reap_time / 1000);
     var dT = Math.abs(reapTime - currentTime);
 
-    var minutes = Math.floor(dT/60);
+    var hours = Math.floor(dT / (60 * 60));
+    var minutes = Math.floor((dT - (hours * 60 * 60))/60);
     var seconds = "0" + (dT - (minutes * 60));
     seconds = seconds.substr(seconds.length-2); // 0 pad the seconds
+
+    var time = String(minutes) + "m" + seconds + "s";
+
+    if(hours > 0)
+    {
+        time = String(hours) + "h" + time;
+    }
 
     // If we've passed the reap time, put a - in the front.
     if(reapTime < currentTime)
     {
-        minutes = "-" + minutes;
+        time = "-" + time;
     }
 
-    return "" + minutes + "m" + seconds + "s";
+    return time;
 }
 
 function updateReapTimer()
@@ -213,13 +225,29 @@ function newMessageHandler(records)
             return;
         }
 
+        // Keeps the message count low
+        if (GM_getValue('message-limit',true))
+        {
+            var $children = msg.parent().children();
+            var numberToRemove = $children.length - messageCountLimit;
+            // only start removing when we have some to remove
+            if (numberToRemove > 20)
+            {
+                $children
+                  // keep around first robin messages
+                  .slice(3, numberToRemove + 3)
+                  .remove();
+            }
+        }
+
         timestamp = $(msg[0]).children('.robin-message--timestamp').text();
         user = $(msg[0]).children('.robin-message--from').text();
         msgText = $(msg[0]).children('.robin-message--message').text();
 
         if (GM_getValue('channel-filter',[]).length > 0)
         {
-            if (!checkChannelFilter(msgText)) {
+            if (!checkChannelFilter(msgText))
+            {
                 $(msg[0]).hide();
             }
         }
@@ -365,7 +393,8 @@ function addTextbox(name, description, initialValue, onChange)
 {
     currentValue = GM_getValue(name, initialValue).join(",");
 
-    $("#robinDesktopNotifier").append("<label>" + description + "<input type='text' name='robin-" + name + "' " + "></input></label>");
+    $("#robinDesktopNotifier")
+      .append("<label><input type='text' name='robin-" + name + "' " + "></input>" + description + "</label>");
     var $textbox = $("input[name='robin-" + name + "']");
     $textbox.on("change", function(e)
     {
@@ -547,6 +576,7 @@ function buttonClickHandler(e, name)
     addSetting("auto-quit-stay", "Auto-Quit Chat When Majority Stays", true);
     addSetting("auto-stay-big", "Stay When Room Size > 4000", true);
     addSetting("fast-clear", "/clear without animation", true);
+    addSetting("message-limit", "Limit messages to latest 500", true);
 
     addTextbox("channel-filter", "Comma delimited channel filters", [], channelFilterChange);
 
