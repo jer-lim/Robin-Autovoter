@@ -393,7 +393,8 @@ function addTextbox(name, description, initialValue, onChange)
 {
     currentValue = GM_getValue(name, initialValue).join(",");
 
-    $("#robinDesktopNotifier").append("<label>" + description + "<input type='text' name='robin-" + name + "' " + "></input></label>");
+    $("#robinDesktopNotifier")
+      .append("<label><input type='text' name='robin-" + name + "' " + "></input>" + description + "</label>");
     var $textbox = $("input[name='robin-" + name + "']");
     $textbox.on("change", function(e)
     {
