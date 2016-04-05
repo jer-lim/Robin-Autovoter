@@ -19,4 +19,4 @@ https://github.com/keythkatz/Robin-Autovoter/raw/master/robinautovoter.user.js
 * Basic Spam Blocking
 * Channel Filtering
 
-![1](http://i.imgur.com/4N2pNk8.gif)
+![1](http://i.imgur.com/kgTFCMv.gif)

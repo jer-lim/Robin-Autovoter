@@ -404,18 +404,28 @@ function buttonClickHandler(e, name)
             $("#robinTimerWidget").hide();
             $("#robinSpamWidget").hide();
             $("#robinDesktopNotifier").show();
+            $("#robinUserList").hide();
             break;
         case "stats":
             $("#robinStatusWidget").show();
             $("#robinTimerWidget").show();
             $("#robinSpamWidget").show();
             $("#robinDesktopNotifier").hide();
+            $("#robinUserList").hide();
+            break;
+        case "users":
+            $("#robinStatusWidget").hide();
+            $("#robinTimerWidget").hide();
+            $("#robinSpamWidget").hide();
+            $("#robinDesktopNotifier").hide();
+            $("#robinUserList").show();
             break;
         default:
             $("#robinStatusWidget").hide();
             $("#robinTimerWidget").hide();
             $("#robinSpamWidget").hide();
             $("#robinDesktopNotifier").hide();
+            $("#robinUserList").hide();
     }
 }
 
@@ -552,6 +562,8 @@ function buttonClickHandler(e, name)
 
     addButton("settings", buttonClickHandler);
     addButton("stats", buttonClickHandler);
+    addButton("users", buttonClickHandler);
+    $(".robin-chat--vote-users").addClass("robin--active");
 
     // monitor message sending
     listenForSubmit();
