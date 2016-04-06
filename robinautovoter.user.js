@@ -475,8 +475,11 @@ function listenForUsernameClick()
             delete mutedUsers[name];
         } else
         { // Mute
-            $userNames.css({textDecoration: "line-through"});
-            mutedUsers[name] = true;
+            if (GM_getValue('mute-users',true))
+            {
+                $userNames.css({textDecoration: "line-through"});
+                mutedUsers[name] = true;
+            }
         }
     });
 }
