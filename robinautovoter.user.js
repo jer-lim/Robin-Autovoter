@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Robin Autovoter
 // @namespace    http://jerl.im
-// @version      1.36
+// @version      1.37
 // @description  Autovotes via text on /r/robin
 // @author       /u/GuitarShirt and /u/keythkatz
 // @match        https://www.reddit.com/robin*
@@ -76,6 +76,7 @@ function sendTrackingStatistics(config)
         "&gr=" + r.robin.stats.increaseVotes +
         "&nv=" + r.robin.stats.abstainVotes +
         "&count=" + r.robin.stats.totalUsers +
+        "&present=" + r.robin.stats.presentUsers +
         "&ft=" + Math.floor(r.config.robin_room_date / 1000) +
         "&rt=" + Math.floor(r.config.robin_room_reap_time / 1000);
 
@@ -97,6 +98,7 @@ function updateStatistics(config)
     {
         var robinUserList = config.robin_user_list;
         r.robin.stats.totalUsers = robinUserList.length;
+        r.robin.stats.presentUsers = robinUserList.filter(function(voter){return voter.present === true;}).length;
         r.robin.stats.increaseVotes = robinUserList.filter(function(voter){return voter.vote === "INCREASE";}).length;
         r.robin.stats.abandonVotes = robinUserList.filter(function(voter){return voter.vote === "ABANDON";}).length;
         r.robin.stats.abstainVotes = robinUserList.filter(function(voter){return voter.vote === "NOVOTE";}).length;
