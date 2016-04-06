@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Robin Autovoter
 // @namespace    http://jerl.im
-// @version      1.35
+// @version      1.36
 // @description  Autovotes via text on /r/robin
 // @author       /u/GuitarShirt and /u/keythkatz
 // @match        https://www.reddit.com/robin*
@@ -413,7 +413,7 @@ function addTextbox(name, description, initialValue, onChange)
     $textbox.val(currentValue);
 }
 
-function addButton(name, onClick)
+function addAction(name, onClick)
 {
     $("#robinActionsWidget")
       .find(".robin-chat--buttons")
@@ -475,10 +475,30 @@ function listenForUsernameClick()
             delete mutedUsers[name];
         } else
         { // Mute
-            $userNames.css({textDecoration: "line-through"});
-            mutedUsers[name] = true;
+            if (GM_getValue('mute-users',true))
+            {
+                $userNames.css({textDecoration: "line-through"});
+                mutedUsers[name] = true;
+            }
         }
     });
+}
+
+function addModal(id, title, body)
+{
+    $('body').append("<div class='modal fade' id='" + id + "' tabindex='-1' role='dialog' aria-labelledby='" + title + "'>\
+      <div class='modal-dialog' role='document'>\
+        <div class='modal-content'>\
+          <div class='modal-header'>\
+            <a href='javascript: void 0;' class='c-close c-hide-text' data-dismiss='modal'>close this window</a>\
+          </div>\
+          <div class='modal-body'>\
+      "
+      + body +
+      "   </div>\
+        </div>\
+      </div>\
+    </div>");
 }
 
 (function(){
@@ -528,6 +548,13 @@ function listenForUsernameClick()
         $("#robinDesktopNotifier").hide().after(
             // Statistics Widget
             "<div id='robinStatusWidget' class='robin-chat--sidebar-widget' style='display:none;'>" +
+
+            "<button type='button' style='width:100%;' class='robin-chat--vote' data-toggle='modal' data-target='#leaderboardModal'>\
+              <span class='robin-chat--vote-label'>\
+                Leaderboard\
+              </span>\
+            </button>" +
+
 
             // Reap timer widget
             "<div class='robin-chat--vote robin-chat--stat-widget robin-chat--vote-reap-time robin--vote-class--reap-time' value='REAPTIME'>" +
@@ -612,16 +639,18 @@ function listenForUsernameClick()
 
     addTextbox("channel-filter", "Comma delimited channel filters", [], channelFilterChange);
 
-    addButton("settings", buttonClickHandler);
-    addButton("stats", buttonClickHandler);
-    addButton("users", buttonClickHandler);
+    addModal("leaderboardModal", "Leaderboard", "<iframe src = 'https://monstrouspeace.com/robintracker/?ft=absolute' width='100%' height='400px'/>");
+
+    addAction("settings", buttonClickHandler);
+    addAction("stats", buttonClickHandler);
+    addAction("users", buttonClickHandler);
     $(".robin-chat--vote-users").addClass("robin--active");
 
     // monitor message sending
     listenForSubmit();
 
     // listen for clicks to mute
-    listenForUsernameClick()
+    listenForUsernameClick();
 
     // With the statistics widget in place, populate it initially from local values
     updateStatistics(r.config);
